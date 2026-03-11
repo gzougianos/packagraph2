@@ -32,6 +32,9 @@ public class ProjectManager {
         if (!Files.exists(path)) {
             throw new IOException("Project file not found: " + filePath);
         }
+        if (!path.toFile().isFile()) {
+            throw new IOException("Project is not a file: " + filePath);
+        }
         return mapper.readValue(path.toFile(), ProjectConfig.class);
     }
 
