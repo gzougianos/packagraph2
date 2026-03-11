@@ -17,6 +17,10 @@
                 <button onclick="showCreateProject()" class="btn btn-primary btn-large">Create New Project</button>
                 <button onclick="showOpenProject()" class="btn btn-secondary btn-large">Open Project</button>
             </div>
+            <div id="recent-projects" class="recent-projects" style="display:none">
+                <h3>Recent Projects</h3>
+                <div id="recent-projects-list"></div>
+            </div>
         </div>
     </div>
 
@@ -46,15 +50,23 @@
 
     <!-- Open Project Dialog -->
     <div id="open-dialog" class="dialog-overlay" style="display:none">
-        <div class="dialog">
+        <div class="dialog dialog-wide">
             <h2>Open Project</h2>
+            <!-- Path bar -->
             <div class="form-group">
-                <label>Project File Path (.pg2)</label>
-                <input type="text" id="open-path" placeholder="/path/to/project.pg2">
+                <div class="browser-path-bar">
+                    <input type="text" id="open-path" placeholder="/path/to/project.pg2"
+                           onkeydown="if(event.key==='Enter') browseOrOpen()">
+                    <button onclick="browseOrOpen()" class="btn btn-small">Go</button>
+                </div>
+            </div>
+            <!-- File browser -->
+            <div id="file-browser" class="file-browser">
+                <div id="file-browser-list" class="file-browser-list"></div>
             </div>
             <div class="dialog-actions">
                 <button onclick="hideDialogs()" class="btn btn-secondary">Cancel</button>
-                <button onclick="openProject()" class="btn btn-primary">Open</button>
+                <button onclick="openProject()" class="btn btn-primary" id="open-btn" disabled>Open</button>
             </div>
         </div>
     </div>

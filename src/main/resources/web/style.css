@@ -38,6 +38,132 @@ body {
     gap: 1rem;
 }
 
+/* ===== Recent Projects ===== */
+.recent-projects {
+    margin-top: 2rem;
+    width: 400px;
+    max-width: 90vw;
+}
+
+.recent-projects h3 {
+    font-size: 0.85rem;
+    color: #8899aa;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 8px;
+}
+
+.recent-project-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: #2a2a3e;
+    border: 1px solid #333;
+    border-radius: 6px;
+    margin-bottom: 6px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.recent-project-item:hover {
+    background: #3a3a4e;
+    border-color: #2980b9;
+}
+
+.recent-project-name {
+    font-weight: 600;
+    color: #e0e0e0;
+    font-size: 0.9rem;
+}
+
+.recent-project-path {
+    font-size: 0.75rem;
+    color: #777;
+    font-family: monospace;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.recent-project-time {
+    font-size: 0.7rem;
+    color: #555;
+    margin-left: auto;
+    white-space: nowrap;
+}
+
+/* ===== File Browser ===== */
+.dialog-wide {
+    width: 580px;
+}
+
+.browser-path-bar {
+    display: flex;
+    gap: 4px;
+}
+
+.browser-path-bar input {
+    flex: 1;
+}
+
+.file-browser {
+    border: 1px solid #444;
+    border-radius: 4px;
+    background: #1a1a2e;
+    max-height: 350px;
+    overflow-y: auto;
+}
+
+.file-browser-list {
+    padding: 4px 0;
+}
+
+.file-entry {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: #ccc;
+    transition: background 0.1s;
+}
+
+.file-entry:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.file-entry.selected {
+    background: #2980b9;
+    color: white;
+}
+
+.file-entry-icon {
+    font-size: 1rem;
+    flex-shrink: 0;
+    width: 20px;
+    text-align: center;
+}
+
+.file-entry-icon.dir {
+    color: #f39c12;
+}
+
+.file-entry-icon.pg2 {
+    color: #2ecc71;
+}
+
+.file-entry-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.file-entry-parent {
+    color: #888;
+}
+
 /* ===== Buttons ===== */
 .btn {
     padding: 8px 16px;

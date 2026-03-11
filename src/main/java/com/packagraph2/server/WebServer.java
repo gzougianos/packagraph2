@@ -7,18 +7,23 @@ import com.packagraph2.dot.DotGenerator;
 import com.packagraph2.model.DependencyGraph;
 import com.packagraph2.model.ProjectConfig;
 import com.packagraph2.project.ProjectManager;
+import com.packagraph2.project.RecentProjectsManager;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.http.staticfiles.Location;
 
-import java.util.List;
-import java.util.Map;
+import java.io.IOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.*;
 
 public class WebServer {
 
     private final int port;
     private final String projectFile;
     private final ProjectManager projectManager = new ProjectManager();
+    private final RecentProjectsManager recentManager = new RecentProjectsManager();
     private final SourceScanner sourceScanner = new SourceScanner();
     private final DependencyAnalyzer analyzer = new DependencyAnalyzer();
     private final DotGenerator dotGenerator = new DotGenerator();
@@ -42,6 +47,8 @@ public class WebServer {
         app.post("/api/project/save", this::saveProject);
         app.post("/api/project/open", this::openProject);
         app.get("/api/project/initial", this::getInitialProject);
+        app.get("/api/project/recent", this::getRecentProjects);
+        app.post("/api/browse", this::browseDirectory);
 
         app.start(port);
     }
@@ -52,11 +59,6 @@ public class WebServer {
         }
     }
 
-    /**
-     * POST /api/scan-sources
-     * Body: { "rootDirectory": "/path/to/project" }
-     * Returns: { "sourceDirectories": [...] }
-     */
     private void scanSources(Context ctx) {
         try {
             JsonNode body = ProjectManager.getMapper().readTree(ctx.body());
@@ -68,15 +70,10 @@ public class WebServer {
         }
     }
 
-    /**
-     * POST /api/analyze
-     * Body: { "sourceDirectories": [...] }
-     * Returns: DependencyGraph
-     */
     private void analyze(Context ctx) {
         try {
             JsonNode body = ProjectManager.getMapper().readTree(ctx.body());
-            List<String> dirs = new java.util.ArrayList<>();
+            List<String> dirs = new ArrayList<>();
             body.get("sourceDirectories").forEach(n -> dirs.add(n.asText()));
             DependencyGraph graph = analyzer.analyze(dirs);
             ctx.json(graph);
@@ -85,11 +82,6 @@ public class WebServer {
         }
     }
 
-    /**
-     * POST /api/dot
-     * Body: ProjectConfig (with graph, rules, and display options)
-     * Returns: { "dot": "digraph..." }
-     */
     private void generateDot(Context ctx) {
         try {
             ProjectConfig config = ProjectManager.getMapper().readValue(ctx.body(), ProjectConfig.class);
@@ -104,52 +96,111 @@ public class WebServer {
         }
     }
 
-    /**
-     * POST /api/project/save
-     * Body: { "filePath": "...", "config": { ProjectConfig } }
-     */
     private void saveProject(Context ctx) {
         try {
             JsonNode body = ProjectManager.getMapper().readTree(ctx.body());
             String filePath = body.get("filePath").asText();
             ProjectConfig config = ProjectManager.getMapper().treeToValue(body.get("config"), ProjectConfig.class);
             projectManager.save(config, filePath);
+            recentManager.addRecentProject(config.getName(), filePath);
             ctx.json(Map.of("success", true));
         } catch (Exception e) {
             ctx.status(500).json(Map.of("error", e.getMessage()));
         }
     }
 
-    /**
-     * POST /api/project/open
-     * Body: { "filePath": "..." }
-     * Returns: ProjectConfig
-     */
     private void openProject(Context ctx) {
         try {
             JsonNode body = ProjectManager.getMapper().readTree(ctx.body());
             String filePath = body.get("filePath").asText();
             ProjectConfig config = projectManager.load(filePath);
+            recentManager.addRecentProject(config.getName(), filePath);
             ctx.json(Map.of("config", config, "filePath", filePath));
         } catch (Exception e) {
             ctx.status(500).json(Map.of("error", e.getMessage()));
         }
     }
 
-    /**
-     * GET /api/project/initial
-     * Returns the project file passed via --project flag, if any.
-     */
     private void getInitialProject(Context ctx) {
         try {
             if (projectFile != null && !projectFile.isBlank()) {
                 ProjectConfig config = projectManager.load(projectFile);
+                recentManager.addRecentProject(config.getName(), projectFile);
                 ctx.json(Map.of("config", config, "filePath", projectFile));
             } else {
                 ctx.json(Map.of());
             }
         } catch (Exception e) {
             ctx.json(Map.of());
+        }
+    }
+
+    /**
+     * GET /api/project/recent
+     * Returns the list of recently opened projects.
+     */
+    private void getRecentProjects(Context ctx) {
+        ctx.json(recentManager.getRecentProjects());
+    }
+
+    /**
+     * POST /api/browse
+     * Body: { "directory": "/path/to/dir" }
+     * Returns: { "current": "/path/to/dir", "parent": "/path/to", "entries": [...] }
+     * Each entry: { "name": "...", "path": "...", "type": "directory"|"pg2file"|"file" }
+     */
+    private void browseDirectory(Context ctx) {
+        try {
+            JsonNode body = ProjectManager.getMapper().readTree(ctx.body());
+            String dirPath = body.has("directory") && !body.get("directory").asText().isBlank()
+                    ? body.get("directory").asText()
+                    : System.getProperty("user.home");
+
+            Path dir = Path.of(dirPath).toAbsolutePath().normalize();
+            if (!Files.isDirectory(dir)) {
+                ctx.status(400).json(Map.of("error", "Not a directory: " + dir));
+                return;
+            }
+
+            List<Map<String, String>> entries = new ArrayList<>();
+
+            try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir)) {
+                for (Path entry : stream) {
+                    String name = entry.getFileName().toString();
+                    // Skip hidden files/dirs
+                    if (name.startsWith(".")) continue;
+
+                    if (Files.isDirectory(entry)) {
+                        entries.add(Map.of(
+                                "name", name,
+                                "path", entry.toAbsolutePath().normalize().toString(),
+                                "type", "directory"
+                        ));
+                    } else if (name.endsWith(".pg2")) {
+                        entries.add(Map.of(
+                                "name", name,
+                                "path", entry.toAbsolutePath().normalize().toString(),
+                                "type", "pg2file"
+                        ));
+                    }
+                }
+            }
+
+            // Sort: directories first, then pg2 files, both alphabetical
+            entries.sort((a, b) -> {
+                int typeCompare = a.get("type").compareTo(b.get("type"));
+                if (typeCompare != 0) return typeCompare;
+                return a.get("name").compareToIgnoreCase(b.get("name"));
+            });
+
+            String parent = dir.getParent() != null ? dir.getParent().toString() : null;
+            Map<String, Object> result = new HashMap<>();
+            result.put("current", dir.toString());
+            result.put("parent", parent);
+            result.put("entries", entries);
+            ctx.json(result);
+        } catch (IOException e) {
+            ctx.status(500).json(Map.of("error", e.getMessage()));
         }
     }
 }

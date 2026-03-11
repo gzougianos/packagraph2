@@ -16,6 +16,9 @@ import picocli.CommandLine.Command;
 public class Main implements Runnable {
 
     public static void main(String[] args) {
+        if (args == null || args.length == 0){
+            args = new String[]{"serve"};
+        }
         int exitCode = new CommandLine(new Main()).execute(args);
         System.exit(exitCode);
     }

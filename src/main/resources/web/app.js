@@ -61,6 +61,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // No initial project
     }
 
+    loadRecentProjects();
     initSidebarResizer();
     initGraphInteraction();
     initKeyboardShortcuts();
@@ -76,13 +77,199 @@ function showCreateProject() {
 
 function showOpenProject() {
     document.getElementById('open-dialog').style.display = 'flex';
-    document.getElementById('open-path').focus();
+    document.getElementById('open-btn').disabled = true;
+    browseDirectory('');
 }
 
 function hideDialogs() {
     document.getElementById('create-dialog').style.display = 'none';
     document.getElementById('open-dialog').style.display = 'none';
     document.getElementById('group-dialog').style.display = 'none';
+}
+
+// =============================================================================
+// Recent Projects
+// =============================================================================
+async function loadRecentProjects() {
+    try {
+        const resp = await fetch('/api/project/recent');
+        const projects = await resp.json();
+
+        const container = document.getElementById('recent-projects');
+        const list = document.getElementById('recent-projects-list');
+
+        if (!projects || projects.length === 0) {
+            container.style.display = 'none';
+            return;
+        }
+
+        container.style.display = 'block';
+        list.innerHTML = '';
+
+        projects.forEach(proj => {
+            const div = document.createElement('div');
+            div.className = 'recent-project-item';
+            div.onclick = () => openProjectByPath(proj.filePath);
+
+            const timeAgo = formatTimeAgo(proj.lastOpened);
+            div.innerHTML =
+                '<div style="flex:1;min-width:0">' +
+                    '<div class="recent-project-name">' + escapeHtml(proj.name) + '</div>' +
+                    '<div class="recent-project-path">' + escapeHtml(proj.filePath) + '</div>' +
+                '</div>' +
+                '<span class="recent-project-time">' + timeAgo + '</span>';
+            list.appendChild(div);
+        });
+    } catch (e) {
+        // Ignore
+    }
+}
+
+function formatTimeAgo(timestamp) {
+    const diff = Date.now() - timestamp;
+    const minutes = Math.floor(diff / 60000);
+    if (minutes < 1) return 'just now';
+    if (minutes < 60) return minutes + 'm ago';
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return hours + 'h ago';
+    const days = Math.floor(hours / 24);
+    if (days < 30) return days + 'd ago';
+    return new Date(timestamp).toLocaleDateString();
+}
+
+async function openProjectByPath(filePath) {
+    showLoading('Opening project...');
+    try {
+        const resp = await fetch('/api/project/open', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ filePath: filePath })
+        });
+        const data = await resp.json();
+
+        if (data.error) {
+            toast('Error: ' + data.error, 'error');
+            return;
+        }
+
+        state.config = data.config;
+        state.filePath = data.filePath;
+        hideDialogs();
+        pushUndo();
+        markClean();
+        showMainApp();
+    } catch (e) {
+        toast('Error opening: ' + e.message, 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+// =============================================================================
+// File Browser
+// =============================================================================
+let selectedBrowserFile = null;
+
+async function browseDirectory(dirPath) {
+    try {
+        const resp = await fetch('/api/browse', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ directory: dirPath })
+        });
+        const data = await resp.json();
+
+        if (data.error) {
+            toast('Error browsing: ' + data.error, 'error');
+            return;
+        }
+
+        document.getElementById('open-path').value = data.current;
+        selectedBrowserFile = null;
+        document.getElementById('open-btn').disabled = true;
+
+        const list = document.getElementById('file-browser-list');
+        list.innerHTML = '';
+
+        // Parent directory entry
+        if (data.parent) {
+            const parentDiv = document.createElement('div');
+            parentDiv.className = 'file-entry file-entry-parent';
+            parentDiv.innerHTML =
+                '<span class="file-entry-icon dir">&uarr;</span>' +
+                '<span class="file-entry-name">..</span>';
+            parentDiv.ondblclick = () => browseDirectory(data.parent);
+            parentDiv.onclick = () => {
+                document.getElementById('open-path').value = data.parent;
+                selectedBrowserFile = null;
+                document.getElementById('open-btn').disabled = true;
+                clearBrowserSelection();
+            };
+            list.appendChild(parentDiv);
+        }
+
+        data.entries.forEach(entry => {
+            const div = document.createElement('div');
+            div.className = 'file-entry';
+
+            if (entry.type === 'directory') {
+                div.innerHTML =
+                    '<span class="file-entry-icon dir">&#128193;</span>' +
+                    '<span class="file-entry-name">' + escapeHtml(entry.name) + '</span>';
+                div.ondblclick = () => browseDirectory(entry.path);
+                div.onclick = () => {
+                    document.getElementById('open-path').value = entry.path;
+                    selectedBrowserFile = null;
+                    document.getElementById('open-btn').disabled = true;
+                    clearBrowserSelection();
+                };
+            } else {
+                // pg2 file
+                div.innerHTML =
+                    '<span class="file-entry-icon pg2">&#128202;</span>' +
+                    '<span class="file-entry-name">' + escapeHtml(entry.name) + '</span>';
+                div.onclick = () => {
+                    clearBrowserSelection();
+                    div.classList.add('selected');
+                    selectedBrowserFile = entry.path;
+                    document.getElementById('open-path').value = entry.path;
+                    document.getElementById('open-btn').disabled = false;
+                };
+                div.ondblclick = () => {
+                    selectedBrowserFile = entry.path;
+                    document.getElementById('open-path').value = entry.path;
+                    openProject();
+                };
+            }
+
+            list.appendChild(div);
+        });
+
+        if (data.entries.length === 0 && !data.parent) {
+            list.innerHTML = '<div style="padding:12px;color:#666;font-size:0.85rem">Empty directory</div>';
+        }
+    } catch (e) {
+        toast('Error browsing: ' + e.message, 'error');
+    }
+}
+
+function clearBrowserSelection() {
+    document.querySelectorAll('#file-browser-list .file-entry.selected').forEach(el => {
+        el.classList.remove('selected');
+    });
+}
+
+function browseOrOpen() {
+    const path = document.getElementById('open-path').value.trim();
+    if (!path) return;
+
+    if (path.endsWith('.pg2')) {
+        selectedBrowserFile = path;
+        document.getElementById('open-btn').disabled = false;
+        openProject();
+    } else {
+        browseDirectory(path);
+    }
 }
 
 // =============================================================================
@@ -174,6 +361,7 @@ async function createProject() {
 
         hideDialogs();
         pushUndo();
+        markClean();
         showMainApp();
     } catch (e) {
         toast('Error analyzing: ' + e.message, 'error');
@@ -186,33 +374,12 @@ async function createProject() {
 // Open Project
 // =============================================================================
 async function openProject() {
-    const filePath = document.getElementById('open-path').value.trim();
-    if (!filePath) return;
-
-    showLoading('Opening project...');
-    try {
-        const resp = await fetch('/api/project/open', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ filePath: filePath })
-        });
-        const data = await resp.json();
-
-        if (data.error) {
-            toast('Error: ' + data.error, 'error');
-            return;
-        }
-
-        state.config = data.config;
-        state.filePath = data.filePath;
-        hideDialogs();
-        pushUndo();
-        showMainApp();
-    } catch (e) {
-        toast('Error opening: ' + e.message, 'error');
-    } finally {
-        hideLoading();
+    const filePath = selectedBrowserFile || document.getElementById('open-path').value.trim();
+    if (!filePath || !filePath.endsWith('.pg2')) {
+        toast('Please select a .pg2 file.', 'error');
+        return;
     }
+    await openProjectByPath(filePath);
 }
 
 // =============================================================================
