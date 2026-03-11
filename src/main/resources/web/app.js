@@ -1,4 +1,6 @@
-// ===== State =====
+// =============================================================================
+// State
+// =============================================================================
 let state = {
     filePath: null,
     config: {
@@ -16,13 +18,33 @@ let state = {
 
 let vizInstance = null;
 let renderTimeout = null;
+let selectedNodes = new Set();
+let highlightedNode = null;
+let contextMenuNode = null;
 
-// ===== Initialization =====
+// Zoom/pan state
+let zoom = { scale: 1, x: 0, y: 0 };
+let isPanning = false;
+let panStart = { x: 0, y: 0 };
+let panOffset = { x: 0, y: 0 };
+
+// Drag-to-select state
+let isSelecting = false;
+let selectStart = { x: 0, y: 0 };
+
+// Undo/redo
+let undoStack = [];
+let redoStack = [];
+
+// Tooltip
+let tooltipEl = null;
+
+// =============================================================================
+// Initialization
+// =============================================================================
 document.addEventListener('DOMContentLoaded', async () => {
-    // Initialize viz.js
     vizInstance = await Viz.instance();
 
-    // Check if a project was passed via --project flag
     try {
         const resp = await fetch('/api/project/initial');
         const data = await resp.json();
@@ -32,27 +54,36 @@ document.addEventListener('DOMContentLoaded', async () => {
             showMainApp();
         }
     } catch (e) {
-        // No initial project, show landing page
+        // No initial project
     }
 
     initSidebarResizer();
+    initGraphInteraction();
+    initKeyboardShortcuts();
 });
 
-// ===== Landing Page =====
+// =============================================================================
+// Landing Page
+// =============================================================================
 function showCreateProject() {
     document.getElementById('create-dialog').style.display = 'flex';
+    document.getElementById('create-name').focus();
 }
 
 function showOpenProject() {
     document.getElementById('open-dialog').style.display = 'flex';
+    document.getElementById('open-path').focus();
 }
 
 function hideDialogs() {
     document.getElementById('create-dialog').style.display = 'none';
     document.getElementById('open-dialog').style.display = 'none';
+    document.getElementById('group-dialog').style.display = 'none';
 }
 
-// ===== Create Project =====
+// =============================================================================
+// Create Project
+// =============================================================================
 async function scanSources() {
     const rootDir = document.getElementById('create-root').value.trim();
     if (!rootDir) return;
@@ -67,7 +98,7 @@ async function scanSources() {
         const data = await resp.json();
 
         if (data.error) {
-            alert('Error: ' + data.error);
+            toast('Error: ' + data.error, 'error');
             return;
         }
 
@@ -75,11 +106,11 @@ async function scanSources() {
         list.innerHTML = '';
 
         if (data.sourceDirectories.length === 0) {
-            list.innerHTML = '<p style="color:#888">No Java source directories found.</p>';
+            list.innerHTML = '<p style="color:#888;font-size:0.85rem">No Java source directories found.</p>';
         } else {
             data.sourceDirectories.forEach(dir => {
                 const label = document.createElement('label');
-                label.innerHTML = `<input type="checkbox" value="${dir}" checked> ${dir}`;
+                label.innerHTML = '<input type="checkbox" value="' + escapeHtml(dir) + '" checked> ' + escapeHtml(dir);
                 list.appendChild(label);
             });
         }
@@ -87,7 +118,7 @@ async function scanSources() {
         document.getElementById('source-dirs-section').style.display = 'block';
         document.getElementById('create-btn').disabled = data.sourceDirectories.length === 0;
     } catch (e) {
-        alert('Error scanning: ' + e.message);
+        toast('Error scanning: ' + e.message, 'error');
     } finally {
         hideLoading();
     }
@@ -97,7 +128,7 @@ async function createProject() {
     const name = document.getElementById('create-name').value.trim();
     const rootDir = document.getElementById('create-root').value.trim();
     if (!name || !rootDir) {
-        alert('Please fill in all fields.');
+        toast('Please fill in all fields.', 'error');
         return;
     }
 
@@ -105,7 +136,7 @@ async function createProject() {
     const selectedDirs = Array.from(checkboxes).map(cb => cb.value);
 
     if (selectedDirs.length === 0) {
-        alert('Please select at least one source directory.');
+        toast('Select at least one source directory.', 'error');
         return;
     }
 
@@ -119,7 +150,7 @@ async function createProject() {
         const graph = await resp.json();
 
         if (graph.error) {
-            alert('Error: ' + graph.error);
+            toast('Error: ' + graph.error, 'error');
             return;
         }
 
@@ -137,15 +168,18 @@ async function createProject() {
         state.filePath = rootDir.replace(/\/$/, '') + '/' + name + '.pg2';
 
         hideDialogs();
+        pushUndo();
         showMainApp();
     } catch (e) {
-        alert('Error analyzing: ' + e.message);
+        toast('Error analyzing: ' + e.message, 'error');
     } finally {
         hideLoading();
     }
 }
 
-// ===== Open Project =====
+// =============================================================================
+// Open Project
+// =============================================================================
 async function openProject() {
     const filePath = document.getElementById('open-path').value.trim();
     if (!filePath) return;
@@ -160,29 +194,31 @@ async function openProject() {
         const data = await resp.json();
 
         if (data.error) {
-            alert('Error: ' + data.error);
+            toast('Error: ' + data.error, 'error');
             return;
         }
 
         state.config = data.config;
         state.filePath = data.filePath;
         hideDialogs();
+        pushUndo();
         showMainApp();
     } catch (e) {
-        alert('Error opening: ' + e.message);
+        toast('Error opening: ' + e.message, 'error');
     } finally {
         hideLoading();
     }
 }
 
-// ===== Main App =====
+// =============================================================================
+// Main App
+// =============================================================================
 function showMainApp() {
     document.getElementById('landing-page').style.display = 'none';
     document.getElementById('main-app').style.display = 'flex';
     document.getElementById('main-app').style.flexDirection = 'column';
     document.getElementById('project-title').textContent = state.config.name || 'packagraph2';
 
-    // Sync UI with config
     document.getElementById('opt-direction').value = state.config.graphDirection;
     document.getElementById('opt-circular').checked = state.config.highlightCircularDependencies;
     document.getElementById('opt-trim-prefix').checked = state.config.trimCommonPrefix;
@@ -192,11 +228,12 @@ function showMainApp() {
     renderGraph();
 }
 
-// ===== Graph Rendering =====
+// =============================================================================
+// Graph Rendering
+// =============================================================================
 async function renderGraph() {
     if (!state.config.graph) return;
 
-    // Debounce rendering
     if (renderTimeout) clearTimeout(renderTimeout);
     renderTimeout = setTimeout(async () => {
         try {
@@ -208,7 +245,8 @@ async function renderGraph() {
             const data = await resp.json();
 
             if (data.error) {
-                console.error('DOT generation error:', data.error);
+                console.error('DOT error:', data.error);
+                toast('Render error: ' + data.error, 'error');
                 return;
             }
 
@@ -217,30 +255,673 @@ async function renderGraph() {
             container.innerHTML = '';
             container.appendChild(svg);
 
-            // Make SVG fill container and be pannable
+            // Remove fixed dimensions so SVG scales with container
+            svg.removeAttribute('width');
+            svg.removeAttribute('height');
             svg.style.width = '100%';
             svg.style.height = '100%';
+
+            // Attach interaction to SVG nodes
+            attachSvgInteraction(svg);
+
+            // Re-apply zoom
+            applyZoom();
+
+            // Re-apply selection highlights
+            applySelectionHighlights();
 
         } catch (e) {
             console.error('Render error:', e);
         }
-    }, 200);
+    }, 150);
 }
 
-// ===== Config Changes =====
+// =============================================================================
+// SVG Interaction
+// =============================================================================
+function attachSvgInteraction(svg) {
+    const nodes = svg.querySelectorAll('.node');
+
+    nodes.forEach(node => {
+        const titleEl = node.querySelector('title');
+        if (!titleEl) return;
+        const packageName = titleEl.textContent;
+
+        // Click to highlight dependencies
+        node.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (e.ctrlKey || e.metaKey) {
+                toggleNodeSelection(packageName);
+            } else {
+                toggleHighlight(packageName);
+            }
+        });
+
+        // Right-click for context menu
+        node.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            showContextMenu(e.clientX, e.clientY, packageName);
+        });
+
+        // Hover for tooltip
+        node.addEventListener('mouseenter', (e) => showTooltip(e, packageName));
+        node.addEventListener('mouseleave', hideTooltip);
+        node.addEventListener('mousemove', moveTooltip);
+    });
+}
+
+function getNodePackageName(nodeEl) {
+    const titleEl = nodeEl.querySelector('title');
+    return titleEl ? titleEl.textContent : null;
+}
+
+// =============================================================================
+// Highlight Dependencies
+// =============================================================================
+function toggleHighlight(packageName) {
+    const container = document.getElementById('graph-container');
+
+    if (highlightedNode === packageName) {
+        // Toggle off
+        highlightedNode = null;
+        container.classList.remove('highlight-mode');
+        container.querySelectorAll('.node, .edge').forEach(el => el.classList.remove('dimmed'));
+        return;
+    }
+
+    highlightedNode = packageName;
+    const connected = getConnectedPackages(packageName);
+    connected.add(packageName);
+
+    container.classList.add('highlight-mode');
+
+    // Dim non-connected nodes
+    container.querySelectorAll('.node').forEach(node => {
+        const name = getNodePackageName(node);
+        node.classList.toggle('dimmed', !connected.has(name));
+    });
+
+    // Dim non-connected edges
+    container.querySelectorAll('.edge').forEach(edge => {
+        const titleEl = edge.querySelector('title');
+        if (!titleEl) { edge.classList.add('dimmed'); return; }
+        const parts = titleEl.textContent.split('->');
+        if (parts.length !== 2) { edge.classList.add('dimmed'); return; }
+        const from = parts[0].trim();
+        const to = parts[1].trim();
+        edge.classList.toggle('dimmed', !(from === packageName || to === packageName));
+    });
+}
+
+function getConnectedPackages(packageName) {
+    const connected = new Set();
+    if (!state.config.graph) return connected;
+
+    for (const edge of state.config.graph.edges) {
+        if (edge.fromPackage === packageName) connected.add(edge.toPackage);
+        if (edge.toPackage === packageName) connected.add(edge.fromPackage);
+    }
+    return connected;
+}
+
+function getDependencies(packageName) {
+    const deps = new Set();
+    if (!state.config.graph) return deps;
+    for (const edge of state.config.graph.edges) {
+        if (edge.fromPackage === packageName) deps.add(edge.toPackage);
+    }
+    return deps;
+}
+
+function getDependents(packageName) {
+    const deps = new Set();
+    if (!state.config.graph) return deps;
+    for (const edge of state.config.graph.edges) {
+        if (edge.toPackage === packageName) deps.add(edge.fromPackage);
+    }
+    return deps;
+}
+
+// =============================================================================
+// Node Selection
+// =============================================================================
+function toggleNodeSelection(packageName) {
+    if (selectedNodes.has(packageName)) {
+        selectedNodes.delete(packageName);
+    } else {
+        selectedNodes.add(packageName);
+    }
+    applySelectionHighlights();
+    updateSelectionUI();
+}
+
+function clearSelection() {
+    selectedNodes.clear();
+    applySelectionHighlights();
+    updateSelectionUI();
+}
+
+function applySelectionHighlights() {
+    const container = document.getElementById('graph-container');
+    container.querySelectorAll('.node').forEach(node => {
+        const name = getNodePackageName(node);
+        node.classList.toggle('selected', selectedNodes.has(name));
+    });
+}
+
+function updateSelectionUI() {
+    const section = document.getElementById('selection-section');
+    const countEl = document.getElementById('selection-count');
+    const listEl = document.getElementById('selection-list');
+
+    if (selectedNodes.size === 0) {
+        section.style.display = 'none';
+        return;
+    }
+
+    section.style.display = 'block';
+    countEl.textContent = selectedNodes.size;
+
+    listEl.innerHTML = '';
+    for (const name of [...selectedNodes].sort()) {
+        const div = document.createElement('div');
+        div.className = 'package-item internal';
+        div.textContent = name;
+        div.onclick = () => toggleNodeSelection(name);
+        listEl.appendChild(div);
+    }
+}
+
+function hideSelected() {
+    if (selectedNodes.size === 0) return;
+    pushUndo();
+    for (const name of selectedNodes) {
+        state.config.hideRules.push({
+            id: crypto.randomUUID(),
+            pattern: name,
+            enabled: true
+        });
+    }
+    clearSelection();
+    renderRulesList();
+    renderGraph();
+}
+
+function groupSelected() {
+    if (selectedNodes.size < 2) {
+        toast('Select at least 2 packages to group.', 'info');
+        return;
+    }
+    // Find common prefix
+    const names = [...selectedNodes];
+    let prefix = names[0];
+    for (let i = 1; i < names.length; i++) {
+        while (!names[i].startsWith(prefix)) {
+            const lastDot = prefix.lastIndexOf('.');
+            if (lastDot === -1) { prefix = ''; break; }
+            prefix = prefix.substring(0, lastDot);
+        }
+    }
+
+    const pattern = prefix ? prefix + '.**' : names.join('|');
+    document.getElementById('group-dialog-pattern').value = pattern;
+    document.getElementById('group-dialog-name').value = '';
+    document.getElementById('group-dialog').style.display = 'flex';
+    document.getElementById('group-dialog-name').focus();
+}
+
+// =============================================================================
+// Drag-to-Select
+// =============================================================================
+function initDragSelect() {
+    const panel = document.getElementById('graph-panel');
+    const rect = document.getElementById('selection-rect');
+
+    panel.addEventListener('mousedown', (e) => {
+        if (e.button !== 0 || e.target.closest('.node') || e.ctrlKey || e.metaKey) return;
+
+        // Check if shift is held for selection mode
+        if (e.shiftKey) {
+            isSelecting = true;
+            selectStart = { x: e.clientX, y: e.clientY };
+            rect.style.display = 'block';
+            rect.style.left = e.clientX + 'px';
+            rect.style.top = e.clientY + 'px';
+            rect.style.width = '0';
+            rect.style.height = '0';
+            panel.classList.add('selecting');
+            e.preventDefault();
+            return;
+        }
+
+        // Otherwise pan
+        isPanning = true;
+        panStart = { x: e.clientX - panOffset.x, y: e.clientY - panOffset.y };
+        panel.classList.add('panning');
+        e.preventDefault();
+    });
+
+    document.addEventListener('mousemove', (e) => {
+        if (isSelecting) {
+            const x = Math.min(e.clientX, selectStart.x);
+            const y = Math.min(e.clientY, selectStart.y);
+            const w = Math.abs(e.clientX - selectStart.x);
+            const h = Math.abs(e.clientY - selectStart.y);
+            rect.style.left = x + 'px';
+            rect.style.top = y + 'px';
+            rect.style.width = w + 'px';
+            rect.style.height = h + 'px';
+        }
+        if (isPanning) {
+            panOffset.x = e.clientX - panStart.x;
+            panOffset.y = e.clientY - panStart.y;
+            applyZoom();
+        }
+    });
+
+    document.addEventListener('mouseup', (e) => {
+        if (isSelecting) {
+            isSelecting = false;
+            rect.style.display = 'none';
+            panel.classList.remove('selecting');
+            selectNodesInRect(selectStart, { x: e.clientX, y: e.clientY });
+        }
+        if (isPanning) {
+            isPanning = false;
+            panel.classList.remove('panning');
+        }
+    });
+}
+
+function selectNodesInRect(start, end) {
+    const selRect = {
+        left: Math.min(start.x, end.x),
+        top: Math.min(start.y, end.y),
+        right: Math.max(start.x, end.x),
+        bottom: Math.max(start.y, end.y)
+    };
+
+    const container = document.getElementById('graph-container');
+    container.querySelectorAll('.node').forEach(node => {
+        const bbox = node.getBoundingClientRect();
+        const cx = bbox.left + bbox.width / 2;
+        const cy = bbox.top + bbox.height / 2;
+
+        if (cx >= selRect.left && cx <= selRect.right && cy >= selRect.top && cy <= selRect.bottom) {
+            const name = getNodePackageName(node);
+            if (name) selectedNodes.add(name);
+        }
+    });
+
+    applySelectionHighlights();
+    updateSelectionUI();
+}
+
+// =============================================================================
+// Zoom / Pan
+// =============================================================================
+function initZoomPan() {
+    const panel = document.getElementById('graph-panel');
+
+    panel.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const delta = e.deltaY > 0 ? 0.9 : 1.1;
+        const newScale = Math.max(0.1, Math.min(5, zoom.scale * delta));
+
+        // Zoom toward mouse position
+        const rect = panel.getBoundingClientRect();
+        const mx = e.clientX - rect.left;
+        const my = e.clientY - rect.top;
+
+        panOffset.x = mx - (mx - panOffset.x) * (newScale / zoom.scale);
+        panOffset.y = my - (my - panOffset.y) * (newScale / zoom.scale);
+        zoom.scale = newScale;
+
+        applyZoom();
+    }, { passive: false });
+}
+
+function applyZoom() {
+    const viewport = document.getElementById('graph-viewport');
+    viewport.style.transform = 'translate(' + panOffset.x + 'px, ' + panOffset.y + 'px) scale(' + zoom.scale + ')';
+    document.getElementById('zoom-level').textContent = Math.round(zoom.scale * 100) + '%';
+}
+
+function zoomIn() {
+    zoom.scale = Math.min(5, zoom.scale * 1.2);
+    applyZoom();
+}
+
+function zoomOut() {
+    zoom.scale = Math.max(0.1, zoom.scale * 0.8);
+    applyZoom();
+}
+
+function zoomReset() {
+    zoom.scale = 1;
+    panOffset = { x: 0, y: 0 };
+    applyZoom();
+}
+
+// =============================================================================
+// Context Menu
+// =============================================================================
+function showContextMenu(x, y, packageName) {
+    contextMenuNode = packageName;
+    const menu = document.getElementById('context-menu');
+
+    // Position
+    menu.style.left = x + 'px';
+    menu.style.top = y + 'px';
+    menu.style.display = 'block';
+
+    // Adjust if it goes off screen
+    const rect = menu.getBoundingClientRect();
+    if (rect.right > window.innerWidth) {
+        menu.style.left = (x - rect.width) + 'px';
+    }
+    if (rect.bottom > window.innerHeight) {
+        menu.style.top = (y - rect.height) + 'px';
+    }
+
+    // Show/hide "add to selection"
+    const addToSel = document.getElementById('ctx-add-to-selection');
+    addToSel.textContent = selectedNodes.has(packageName)
+        ? 'Remove from selection' : 'Add to selection';
+}
+
+function hideContextMenu() {
+    document.getElementById('context-menu').style.display = 'none';
+    contextMenuNode = null;
+}
+
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.context-menu')) {
+        hideContextMenu();
+    }
+});
+
+document.addEventListener('contextmenu', (e) => {
+    if (!e.target.closest('.node')) {
+        hideContextMenu();
+    }
+});
+
+function ctxHidePackage() {
+    if (!contextMenuNode) return;
+    pushUndo();
+    state.config.hideRules.push({
+        id: crypto.randomUUID(),
+        pattern: contextMenuNode,
+        enabled: true
+    });
+    renderRulesList();
+    renderGraph();
+    hideContextMenu();
+    toast('Hidden: ' + contextMenuNode, 'info');
+}
+
+function ctxHideByPrefix() {
+    if (!contextMenuNode) return;
+    const lastDot = contextMenuNode.lastIndexOf('.');
+    if (lastDot === -1) return ctxHidePackage();
+
+    const prefix = contextMenuNode.substring(0, lastDot);
+    pushUndo();
+    state.config.hideRules.push({
+        id: crypto.randomUUID(),
+        pattern: prefix + '.**',
+        enabled: true
+    });
+    renderRulesList();
+    renderGraph();
+    hideContextMenu();
+    toast('Hidden: ' + prefix + '.**', 'info');
+}
+
+function ctxGroupByPrefix() {
+    if (!contextMenuNode) return;
+    const lastDot = contextMenuNode.lastIndexOf('.');
+    const prefix = lastDot > 0 ? contextMenuNode.substring(0, lastDot) : contextMenuNode;
+
+    document.getElementById('group-dialog-pattern').value = prefix + '.**';
+    document.getElementById('group-dialog-name').value = '';
+    document.getElementById('group-dialog').style.display = 'flex';
+    document.getElementById('group-dialog-name').focus();
+    hideContextMenu();
+}
+
+function ctxShowDependencies() {
+    if (!contextMenuNode) return;
+    toggleHighlight(contextMenuNode);
+    hideContextMenu();
+}
+
+function ctxShowDependents() {
+    if (!contextMenuNode) return;
+    // Highlight only dependents
+    const container = document.getElementById('graph-container');
+    const dependents = getDependents(contextMenuNode);
+    dependents.add(contextMenuNode);
+
+    highlightedNode = contextMenuNode;
+    container.classList.add('highlight-mode');
+
+    container.querySelectorAll('.node').forEach(node => {
+        const name = getNodePackageName(node);
+        node.classList.toggle('dimmed', !dependents.has(name));
+    });
+
+    container.querySelectorAll('.edge').forEach(edge => {
+        const titleEl = edge.querySelector('title');
+        if (!titleEl) { edge.classList.add('dimmed'); return; }
+        const parts = titleEl.textContent.split('->');
+        if (parts.length !== 2) { edge.classList.add('dimmed'); return; }
+        const to = parts[1].trim();
+        edge.classList.toggle('dimmed', to !== contextMenuNode);
+    });
+
+    hideContextMenu();
+}
+
+function ctxSelectDependencies() {
+    if (!contextMenuNode) return;
+    const deps = getDependencies(contextMenuNode);
+    deps.forEach(d => selectedNodes.add(d));
+    applySelectionHighlights();
+    updateSelectionUI();
+    hideContextMenu();
+}
+
+function ctxSelectDependents() {
+    if (!contextMenuNode) return;
+    const deps = getDependents(contextMenuNode);
+    deps.forEach(d => selectedNodes.add(d));
+    applySelectionHighlights();
+    updateSelectionUI();
+    hideContextMenu();
+}
+
+function ctxAddToSelection() {
+    if (!contextMenuNode) return;
+    if (selectedNodes.has(contextMenuNode)) {
+        selectedNodes.delete(contextMenuNode);
+    } else {
+        selectedNodes.add(contextMenuNode);
+    }
+    applySelectionHighlights();
+    updateSelectionUI();
+    hideContextMenu();
+}
+
+// Group dialog callbacks
+function cancelGroupDialog() {
+    document.getElementById('group-dialog').style.display = 'none';
+}
+
+function confirmGroupDialog() {
+    const pattern = document.getElementById('group-dialog-pattern').value.trim();
+    const name = document.getElementById('group-dialog-name').value.trim();
+    if (!pattern || !name) {
+        toast('Pattern and name are required.', 'error');
+        return;
+    }
+    pushUndo();
+    state.config.groupingRules.push({
+        id: crypto.randomUUID(),
+        pattern: pattern,
+        displayName: name,
+        enabled: true
+    });
+    clearSelection();
+    renderRulesList();
+    renderGraph();
+    document.getElementById('group-dialog').style.display = 'none';
+    toast('Group created: ' + name, 'success');
+}
+
+// =============================================================================
+// Tooltip
+// =============================================================================
+function showTooltip(e, packageName) {
+    if (!tooltipEl) {
+        tooltipEl = document.createElement('div');
+        tooltipEl.className = 'node-tooltip';
+        document.body.appendChild(tooltipEl);
+    }
+
+    const deps = getDependencies(packageName);
+    const dependents = getDependents(packageName);
+    const node = state.config.graph.nodes.find(n => n.name === packageName);
+    const type = node && node.external ? 'External' : 'Internal';
+
+    tooltipEl.innerHTML =
+        '<div class="tooltip-title">' + escapeHtml(packageName) + '</div>' +
+        '<div class="tooltip-row">' + type + ' package</div>' +
+        '<div class="tooltip-row">Dependencies: ' + deps.size + '</div>' +
+        '<div class="tooltip-row">Dependents: ' + dependents.size + '</div>';
+
+    tooltipEl.style.display = 'block';
+    positionTooltip(e);
+}
+
+function moveTooltip(e) {
+    if (tooltipEl) positionTooltip(e);
+}
+
+function positionTooltip(e) {
+    if (!tooltipEl) return;
+    let x = e.clientX + 14;
+    let y = e.clientY + 14;
+
+    const rect = tooltipEl.getBoundingClientRect();
+    if (x + 280 > window.innerWidth) x = e.clientX - 280;
+    if (y + 100 > window.innerHeight) y = e.clientY - 100;
+
+    tooltipEl.style.left = x + 'px';
+    tooltipEl.style.top = y + 'px';
+}
+
+function hideTooltip() {
+    if (tooltipEl) tooltipEl.style.display = 'none';
+}
+
+// =============================================================================
+// Undo / Redo
+// =============================================================================
+function pushUndo() {
+    const snapshot = JSON.stringify({
+        groupingRules: state.config.groupingRules,
+        hideRules: state.config.hideRules,
+        graphDirection: state.config.graphDirection,
+        highlightCircularDependencies: state.config.highlightCircularDependencies,
+        trimCommonPrefix: state.config.trimCommonPrefix
+    });
+    undoStack.push(snapshot);
+    redoStack = [];
+    updateUndoRedoButtons();
+}
+
+function undo() {
+    if (undoStack.length === 0) return;
+    const current = JSON.stringify({
+        groupingRules: state.config.groupingRules,
+        hideRules: state.config.hideRules,
+        graphDirection: state.config.graphDirection,
+        highlightCircularDependencies: state.config.highlightCircularDependencies,
+        trimCommonPrefix: state.config.trimCommonPrefix
+    });
+    redoStack.push(current);
+
+    const snapshot = JSON.parse(undoStack.pop());
+    state.config.groupingRules = snapshot.groupingRules;
+    state.config.hideRules = snapshot.hideRules;
+    state.config.graphDirection = snapshot.graphDirection;
+    state.config.highlightCircularDependencies = snapshot.highlightCircularDependencies;
+    state.config.trimCommonPrefix = snapshot.trimCommonPrefix;
+
+    syncUIFromConfig();
+    renderRulesList();
+    renderGraph();
+    updateUndoRedoButtons();
+}
+
+function redo() {
+    if (redoStack.length === 0) return;
+    const current = JSON.stringify({
+        groupingRules: state.config.groupingRules,
+        hideRules: state.config.hideRules,
+        graphDirection: state.config.graphDirection,
+        highlightCircularDependencies: state.config.highlightCircularDependencies,
+        trimCommonPrefix: state.config.trimCommonPrefix
+    });
+    undoStack.push(current);
+
+    const snapshot = JSON.parse(redoStack.pop());
+    state.config.groupingRules = snapshot.groupingRules;
+    state.config.hideRules = snapshot.hideRules;
+    state.config.graphDirection = snapshot.graphDirection;
+    state.config.highlightCircularDependencies = snapshot.highlightCircularDependencies;
+    state.config.trimCommonPrefix = snapshot.trimCommonPrefix;
+
+    syncUIFromConfig();
+    renderRulesList();
+    renderGraph();
+    updateUndoRedoButtons();
+}
+
+function updateUndoRedoButtons() {
+    document.getElementById('btn-undo').disabled = undoStack.length === 0;
+    document.getElementById('btn-redo').disabled = redoStack.length === 0;
+}
+
+function syncUIFromConfig() {
+    document.getElementById('opt-direction').value = state.config.graphDirection;
+    document.getElementById('opt-circular').checked = state.config.highlightCircularDependencies;
+    document.getElementById('opt-trim-prefix').checked = state.config.trimCommonPrefix;
+}
+
+// =============================================================================
+// Config Changes
+// =============================================================================
 function onConfigChanged() {
+    pushUndo();
     state.config.graphDirection = document.getElementById('opt-direction').value;
     state.config.highlightCircularDependencies = document.getElementById('opt-circular').checked;
     state.config.trimCommonPrefix = document.getElementById('opt-trim-prefix').checked;
     renderGraph();
 }
 
-// ===== Grouping Rules =====
+// =============================================================================
+// Grouping Rules
+// =============================================================================
 function addGroupingRule() {
     const pattern = document.getElementById('group-pattern').value.trim();
     const displayName = document.getElementById('group-name').value.trim();
     if (!pattern || !displayName) return;
 
+    pushUndo();
     state.config.groupingRules.push({
         id: crypto.randomUUID(),
         pattern: pattern,
@@ -256,6 +937,7 @@ function addGroupingRule() {
 }
 
 function toggleGroupingRule(id) {
+    pushUndo();
     const rule = state.config.groupingRules.find(r => r.id === id);
     if (rule) {
         rule.enabled = !rule.enabled;
@@ -265,16 +947,20 @@ function toggleGroupingRule(id) {
 }
 
 function removeGroupingRule(id) {
+    pushUndo();
     state.config.groupingRules = state.config.groupingRules.filter(r => r.id !== id);
     renderRulesList();
     renderGraph();
 }
 
-// ===== Hide Rules =====
+// =============================================================================
+// Hide Rules
+// =============================================================================
 function addHideRule() {
     const pattern = document.getElementById('hide-pattern').value.trim();
     if (!pattern) return;
 
+    pushUndo();
     state.config.hideRules.push({
         id: crypto.randomUUID(),
         pattern: pattern,
@@ -288,6 +974,7 @@ function addHideRule() {
 }
 
 function toggleHideRule(id) {
+    pushUndo();
     const rule = state.config.hideRules.find(r => r.id === id);
     if (rule) {
         rule.enabled = !rule.enabled;
@@ -297,12 +984,15 @@ function toggleHideRule(id) {
 }
 
 function removeHideRule(id) {
+    pushUndo();
     state.config.hideRules = state.config.hideRules.filter(r => r.id !== id);
     renderRulesList();
     renderGraph();
 }
 
-// ===== Rules List Rendering =====
+// =============================================================================
+// Rules List Rendering
+// =============================================================================
 function renderRulesList() {
     // Grouping rules
     const groupList = document.getElementById('grouping-rules-list');
@@ -310,13 +1000,15 @@ function renderRulesList() {
     state.config.groupingRules.forEach(rule => {
         const div = document.createElement('div');
         div.className = 'rule-item';
-        div.innerHTML = `
-            <input type="checkbox" ${rule.enabled ? 'checked' : ''} onchange="toggleGroupingRule('${rule.id}')">
-            <span class="rule-text ${rule.enabled ? '' : 'disabled'}">${rule.pattern}</span>
-            <span class="rule-arrow">&rarr;</span>
-            <span class="rule-text ${rule.enabled ? '' : 'disabled'}">${rule.displayName}</span>
-            <button onclick="removeGroupingRule('${rule.id}')" class="btn btn-danger btn-small">&times;</button>
-        `;
+        div.innerHTML =
+            '<input type="checkbox" ' + (rule.enabled ? 'checked' : '') +
+            ' onchange="toggleGroupingRule(\'' + rule.id + '\')">' +
+            '<span class="rule-text ' + (rule.enabled ? '' : 'disabled') + '" title="' + escapeHtml(rule.pattern) + '">' +
+            escapeHtml(rule.pattern) + '</span>' +
+            '<span class="rule-arrow">&rarr;</span>' +
+            '<span class="rule-display-name ' + (rule.enabled ? '' : 'disabled') + '">' +
+            escapeHtml(rule.displayName) + '</span>' +
+            '<button onclick="removeGroupingRule(\'' + rule.id + '\')" class="btn btn-danger btn-small">&times;</button>';
         groupList.appendChild(div);
     });
 
@@ -326,53 +1018,79 @@ function renderRulesList() {
     state.config.hideRules.forEach(rule => {
         const div = document.createElement('div');
         div.className = 'rule-item';
-        div.innerHTML = `
-            <input type="checkbox" ${rule.enabled ? 'checked' : ''} onchange="toggleHideRule('${rule.id}')">
-            <span class="rule-text ${rule.enabled ? '' : 'disabled'}">${rule.pattern}</span>
-            <button onclick="removeHideRule('${rule.id}')" class="btn btn-danger btn-small">&times;</button>
-        `;
+        div.innerHTML =
+            '<input type="checkbox" ' + (rule.enabled ? 'checked' : '') +
+            ' onchange="toggleHideRule(\'' + rule.id + '\')">' +
+            '<span class="rule-text ' + (rule.enabled ? '' : 'disabled') + '" title="' + escapeHtml(rule.pattern) + '">' +
+            escapeHtml(rule.pattern) + '</span>' +
+            '<button onclick="removeHideRule(\'' + rule.id + '\')" class="btn btn-danger btn-small">&times;</button>';
         hideList.appendChild(div);
     });
 }
 
-// ===== Package List =====
+// =============================================================================
+// Package List
+// =============================================================================
 function renderPackageList() {
     const list = document.getElementById('packages-list');
+    const countEl = document.getElementById('package-count');
     list.innerHTML = '';
 
     if (!state.config.graph) return;
 
     const nodes = [...state.config.graph.nodes].sort((a, b) => {
-        // Internal first, then alphabetical
         if (a.external !== b.external) return a.external ? 1 : -1;
         return a.name.localeCompare(b.name);
     });
 
+    countEl.textContent = nodes.length;
+
     nodes.forEach(node => {
+        const deps = getDependencies(node.name).size;
+        const dependents = getDependents(node.name).size;
         const div = document.createElement('div');
         div.className = 'package-item ' + (node.external ? 'external' : 'internal');
-        div.textContent = node.name;
-        div.title = node.external ? 'External dependency' : 'Internal package';
+        div.innerHTML = '<span>' + escapeHtml(node.name) + '</span>' +
+            '<span class="dep-count">' + dependents + '&larr; ' + deps + '&rarr;</span>';
+        div.title = node.name + (node.external ? ' (external)' : ' (internal)') +
+            '\nDependencies: ' + deps + '\nDependents: ' + dependents;
+
+        div.addEventListener('click', () => toggleHighlight(node.name));
+        div.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            showContextMenu(e.clientX, e.clientY, node.name);
+        });
         list.appendChild(div);
     });
 }
 
 function filterPackageList() {
     const search = document.getElementById('package-search').value.toLowerCase();
-    const items = document.querySelectorAll('.package-item');
+    const items = document.querySelectorAll('#packages-list .package-item');
     items.forEach(item => {
         item.style.display = item.textContent.toLowerCase().includes(search) ? '' : 'none';
     });
 }
 
-// ===== Save / Re-analyze =====
+// =============================================================================
+// Collapsible Sections
+// =============================================================================
+function toggleSection(header) {
+    header.classList.toggle('collapsed');
+    const content = header.nextElementSibling;
+    content.classList.toggle('collapsed');
+}
+
+// =============================================================================
+// Save / Re-analyze
+// =============================================================================
 async function saveProject() {
     if (!state.filePath) {
-        alert('No project file path set.');
+        toast('No project file path set.', 'error');
         return;
     }
 
-    showLoading('Saving project...');
+    showLoading('Saving...');
     try {
         const resp = await fetch('/api/project/save', {
             method: 'POST',
@@ -385,10 +1103,12 @@ async function saveProject() {
         const data = await resp.json();
 
         if (data.error) {
-            alert('Error saving: ' + data.error);
+            toast('Error saving: ' + data.error, 'error');
+        } else {
+            toast('Project saved.', 'success');
         }
     } catch (e) {
-        alert('Error saving: ' + e.message);
+        toast('Error saving: ' + e.message, 'error');
     } finally {
         hideLoading();
     }
@@ -396,11 +1116,11 @@ async function saveProject() {
 
 async function reanalyze() {
     if (!state.config.sourceDirectories || state.config.sourceDirectories.length === 0) {
-        alert('No source directories configured.');
+        toast('No source directories configured.', 'error');
         return;
     }
 
-    showLoading('Re-analyzing source code...');
+    showLoading('Analyzing source code...');
     try {
         const resp = await fetch('/api/analyze', {
             method: 'POST',
@@ -410,24 +1130,29 @@ async function reanalyze() {
         const graph = await resp.json();
 
         if (graph.error) {
-            alert('Error: ' + graph.error);
+            toast('Error: ' + graph.error, 'error');
             return;
         }
 
         state.config.graph = graph;
         renderPackageList();
         renderGraph();
+        toast('Analysis complete.', 'success');
     } catch (e) {
-        alert('Error analyzing: ' + e.message);
+        toast('Error: ' + e.message, 'error');
     } finally {
         hideLoading();
     }
 }
 
-// ===== Sidebar Resizer =====
+// =============================================================================
+// Sidebar Resizer
+// =============================================================================
 function initSidebarResizer() {
     const resizer = document.getElementById('sidebar-resizer');
     const sidebar = document.getElementById('sidebar');
+    if (!resizer) return;
+
     let isResizing = false;
 
     resizer.addEventListener('mousedown', (e) => {
@@ -446,13 +1171,59 @@ function initSidebarResizer() {
     });
 
     document.addEventListener('mouseup', () => {
-        isResizing = false;
-        document.body.style.cursor = '';
-        document.body.style.userSelect = '';
+        if (isResizing) {
+            isResizing = false;
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+        }
     });
 }
 
-// ===== Loading =====
+// =============================================================================
+// Graph Interaction Init
+// =============================================================================
+function initGraphInteraction() {
+    initZoomPan();
+    initDragSelect();
+}
+
+// =============================================================================
+// Keyboard Shortcuts
+// =============================================================================
+function initKeyboardShortcuts() {
+    document.addEventListener('keydown', (e) => {
+        // Ctrl+Z / Cmd+Z = Undo
+        if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+            e.preventDefault();
+            undo();
+        }
+        // Ctrl+Y / Cmd+Y or Ctrl+Shift+Z = Redo
+        if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+            e.preventDefault();
+            redo();
+        }
+        // Escape = clear highlight and selection
+        if (e.key === 'Escape') {
+            if (highlightedNode) {
+                highlightedNode = null;
+                const container = document.getElementById('graph-container');
+                container.classList.remove('highlight-mode');
+                container.querySelectorAll('.node, .edge').forEach(el => el.classList.remove('dimmed'));
+            }
+            hideContextMenu();
+            clearSelection();
+        }
+        // Ctrl+S / Cmd+S = Save
+        if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+            e.preventDefault();
+            saveProject();
+        }
+    });
+}
+
+// =============================================================================
+// Loading / Toast
+// =============================================================================
 function showLoading(text) {
     document.getElementById('loading-text').textContent = text || 'Loading...';
     document.getElementById('loading').style.display = 'flex';
@@ -460,4 +1231,28 @@ function showLoading(text) {
 
 function hideLoading() {
     document.getElementById('loading').style.display = 'none';
+}
+
+function toast(message, type) {
+    type = type || 'info';
+    const container = document.getElementById('toast-container');
+    const el = document.createElement('div');
+    el.className = 'toast ' + type;
+    el.textContent = message;
+    container.appendChild(el);
+
+    setTimeout(() => {
+        el.style.opacity = '0';
+        el.style.transition = 'opacity 0.3s';
+        setTimeout(() => el.remove(), 300);
+    }, 3000);
+}
+
+// =============================================================================
+// Utilities
+// =============================================================================
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }

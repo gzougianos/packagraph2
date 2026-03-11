@@ -1,6 +1,5 @@
 package com.packagraph2;
 
-import com.packagraph2.cli.ExportCommand;
 import com.packagraph2.cli.ServeCommand;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
@@ -9,8 +8,7 @@ import picocli.CommandLine.Command;
         name = "packagraph2",
         description = "Java package dependency browser and visualizer",
         subcommands = {
-                ServeCommand.class,
-                ExportCommand.class
+                ServeCommand.class
         },
         mixinStandardHelpOptions = true,
         version = "packagraph2 1.0.0"

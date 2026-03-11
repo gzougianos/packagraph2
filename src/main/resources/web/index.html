@@ -31,7 +31,7 @@
             <div class="form-group">
                 <label>Root Directory (absolute path)</label>
                 <input type="text" id="create-root" placeholder="/path/to/your/java/project">
-                <button onclick="scanSources()" class="btn btn-small">Scan for Sources</button>
+                <button onclick="scanSources()" class="btn btn-small" style="margin-top:4px">Scan for Sources</button>
             </div>
             <div id="source-dirs-section" style="display:none">
                 <label>Source Directories (select which to include)</label>
@@ -62,8 +62,19 @@
     <!-- Main Application -->
     <div id="main-app" class="page" style="display:none">
         <div class="app-header">
-            <h1 id="project-title">packagraph2</h1>
-            <div class="header-actions">
+            <div class="header-left">
+                <h1 id="project-title">packagraph2</h1>
+            </div>
+            <div class="header-center">
+                <button onclick="undo()" class="btn btn-small" id="btn-undo" disabled title="Undo (Ctrl+Z)">Undo</button>
+                <button onclick="redo()" class="btn btn-small" id="btn-redo" disabled title="Redo (Ctrl+Y)">Redo</button>
+                <span class="separator">|</span>
+                <button onclick="zoomIn()" class="btn btn-small" title="Zoom In">+</button>
+                <button onclick="zoomOut()" class="btn btn-small" title="Zoom Out">-</button>
+                <button onclick="zoomReset()" class="btn btn-small" title="Reset Zoom">Fit</button>
+                <span id="zoom-level" class="zoom-label">100%</span>
+            </div>
+            <div class="header-right">
                 <button onclick="reanalyze()" class="btn btn-small">Re-analyze</button>
                 <button onclick="saveProject()" class="btn btn-primary btn-small">Save</button>
             </div>
@@ -71,7 +82,11 @@
         <div class="app-body">
             <!-- Graph Panel -->
             <div class="graph-panel" id="graph-panel">
-                <div id="graph-container"></div>
+                <div id="graph-viewport">
+                    <div id="graph-container"></div>
+                </div>
+                <!-- Selection rectangle -->
+                <div id="selection-rect" style="display:none"></div>
             </div>
 
             <!-- Sidebar -->
@@ -80,57 +95,124 @@
 
                 <!-- Graph Options -->
                 <div class="sidebar-section">
-                    <h3>Graph Options</h3>
-                    <div class="form-group">
-                        <label>Direction</label>
-                        <select id="opt-direction" onchange="onConfigChanged()">
-                            <option value="TOP_TO_BOTTOM">Top to Bottom</option>
-                            <option value="BOTTOM_TO_TOP">Bottom to Top</option>
-                            <option value="LEFT_TO_RIGHT">Left to Right</option>
-                            <option value="RIGHT_TO_LEFT">Right to Left</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>
-                            <input type="checkbox" id="opt-circular" checked onchange="onConfigChanged()">
-                            Highlight Circular Dependencies
-                        </label>
-                    </div>
-                    <div class="form-group">
-                        <label>
-                            <input type="checkbox" id="opt-trim-prefix" onchange="onConfigChanged()">
-                            Trim Common Prefix
-                        </label>
+                    <h3 class="collapsible" onclick="toggleSection(this)">
+                        <span class="collapse-icon">&#9660;</span> Graph Options
+                    </h3>
+                    <div class="section-content">
+                        <div class="form-group">
+                            <label>Direction</label>
+                            <select id="opt-direction" onchange="onConfigChanged()">
+                                <option value="TOP_TO_BOTTOM">Top to Bottom</option>
+                                <option value="BOTTOM_TO_TOP">Bottom to Top</option>
+                                <option value="LEFT_TO_RIGHT">Left to Right</option>
+                                <option value="RIGHT_TO_LEFT">Right to Left</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="opt-circular" checked onchange="onConfigChanged()">
+                                Highlight Circular Dependencies
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="opt-trim-prefix" onchange="onConfigChanged()">
+                                Trim Common Prefix
+                            </label>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Grouping Rules -->
                 <div class="sidebar-section">
-                    <h3>Grouping Rules</h3>
-                    <div id="grouping-rules-list"></div>
-                    <div class="add-rule-form">
-                        <input type="text" id="group-pattern" placeholder="Pattern (e.g., org.spring.**)">
-                        <input type="text" id="group-name" placeholder="Display name (e.g., Spring)">
-                        <button onclick="addGroupingRule()" class="btn btn-small">Add</button>
+                    <h3 class="collapsible" onclick="toggleSection(this)">
+                        <span class="collapse-icon">&#9660;</span> Grouping Rules
+                    </h3>
+                    <div class="section-content">
+                        <div id="grouping-rules-list"></div>
+                        <div class="add-rule-form">
+                            <input type="text" id="group-pattern" placeholder="Pattern (e.g., org.spring.**)">
+                            <input type="text" id="group-name" placeholder="Display name">
+                            <button onclick="addGroupingRule()" class="btn btn-small">Add</button>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Hide Rules -->
                 <div class="sidebar-section">
-                    <h3>Hide Rules</h3>
-                    <div id="hide-rules-list"></div>
-                    <div class="add-rule-form">
-                        <input type="text" id="hide-pattern" placeholder="Pattern (e.g., java.**)">
-                        <button onclick="addHideRule()" class="btn btn-small">Add</button>
+                    <h3 class="collapsible" onclick="toggleSection(this)">
+                        <span class="collapse-icon">&#9660;</span> Hide Rules
+                    </h3>
+                    <div class="section-content">
+                        <div id="hide-rules-list"></div>
+                        <div class="add-rule-form">
+                            <input type="text" id="hide-pattern" placeholder="Pattern (e.g., java.**)">
+                            <button onclick="addHideRule()" class="btn btn-small">Add</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Selection Info -->
+                <div class="sidebar-section" id="selection-section" style="display:none">
+                    <h3 class="collapsible" onclick="toggleSection(this)">
+                        <span class="collapse-icon">&#9660;</span> Selection
+                        <span id="selection-count" class="badge">0</span>
+                    </h3>
+                    <div class="section-content">
+                        <div id="selection-list" class="package-list"></div>
+                        <div class="selection-actions">
+                            <button onclick="hideSelected()" class="btn btn-small">Hide Selected</button>
+                            <button onclick="groupSelected()" class="btn btn-small">Group Selected</button>
+                            <button onclick="clearSelection()" class="btn btn-small btn-secondary">Clear</button>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Packages List -->
                 <div class="sidebar-section">
-                    <h3>Packages</h3>
-                    <input type="text" id="package-search" placeholder="Search packages..." oninput="filterPackageList()">
-                    <div id="packages-list" class="package-list"></div>
+                    <h3 class="collapsible" onclick="toggleSection(this)">
+                        <span class="collapse-icon">&#9660;</span> Packages
+                        <span id="package-count" class="badge">0</span>
+                    </h3>
+                    <div class="section-content">
+                        <input type="text" id="package-search" placeholder="Search packages..." oninput="filterPackageList()">
+                        <div id="packages-list" class="package-list"></div>
+                    </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Context Menu -->
+    <div id="context-menu" class="context-menu" style="display:none">
+        <div class="context-menu-item" onclick="ctxHidePackage()">Hide this package</div>
+        <div class="context-menu-item" onclick="ctxHideByPrefix()">Hide all with same prefix</div>
+        <div class="context-menu-separator"></div>
+        <div class="context-menu-item" onclick="ctxGroupByPrefix()">Group by prefix...</div>
+        <div class="context-menu-separator"></div>
+        <div class="context-menu-item" onclick="ctxShowDependencies()">Highlight dependencies</div>
+        <div class="context-menu-item" onclick="ctxShowDependents()">Highlight dependents</div>
+        <div class="context-menu-separator"></div>
+        <div class="context-menu-item" onclick="ctxSelectDependencies()">Select dependencies</div>
+        <div class="context-menu-item" onclick="ctxSelectDependents()">Select dependents</div>
+        <div class="context-menu-item" id="ctx-add-to-selection" onclick="ctxAddToSelection()">Add to selection</div>
+    </div>
+
+    <!-- Group dialog (for context menu grouping) -->
+    <div id="group-dialog" class="dialog-overlay" style="display:none">
+        <div class="dialog dialog-small">
+            <h2>Create Group</h2>
+            <div class="form-group">
+                <label>Group Display Name</label>
+                <input type="text" id="group-dialog-name" placeholder="e.g., Spring">
+            </div>
+            <div class="form-group">
+                <label>Pattern</label>
+                <input type="text" id="group-dialog-pattern" readonly>
+            </div>
+            <div class="dialog-actions">
+                <button onclick="cancelGroupDialog()" class="btn btn-secondary">Cancel</button>
+                <button onclick="confirmGroupDialog()" class="btn btn-primary">Create Group</button>
             </div>
         </div>
     </div>
@@ -140,6 +222,9 @@
         <div class="spinner"></div>
         <p id="loading-text">Loading...</p>
     </div>
+
+    <!-- Toast notifications -->
+    <div id="toast-container" class="toast-container"></div>
 
     <script src="/app.js"></script>
 </body>
