@@ -96,6 +96,17 @@ body {
     cursor: not-allowed;
 }
 
+.btn-save-dirty {
+    background: #e67e22 !important;
+    border-color: #e67e22 !important;
+    animation: pulse-save 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-save {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.75; }
+}
+
 /* ===== Dialogs ===== */
 .dialog-overlay {
     position: fixed;

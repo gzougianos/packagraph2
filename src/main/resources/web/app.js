@@ -37,6 +37,9 @@ let selectStart = { x: 0, y: 0 };
 let undoStack = [];
 let redoStack = [];
 
+// Dirty (unsaved changes) tracking
+let dirty = false;
+
 // Tooltip
 let tooltipEl = null;
 
@@ -849,7 +852,32 @@ function pushUndo() {
     });
     undoStack.push(snapshot);
     redoStack = [];
+    markDirty();
     updateUndoRedoButtons();
+}
+
+function markDirty() {
+    dirty = true;
+    updateDirtyIndicator();
+}
+
+function markClean() {
+    dirty = false;
+    updateDirtyIndicator();
+}
+
+function updateDirtyIndicator() {
+    const title = document.getElementById('project-title');
+    const saveBtn = document.getElementById('btn-save');
+    const baseName = state.config.name || 'packagraph2';
+
+    if (title) {
+        title.textContent = dirty ? baseName + ' *' : baseName;
+    }
+    if (saveBtn) {
+        saveBtn.classList.toggle('btn-save-dirty', dirty);
+    }
+    document.title = dirty ? 'packagraph2 *' : 'packagraph2';
 }
 
 function undo() {
@@ -1241,6 +1269,7 @@ async function saveProject() {
         if (data.error) {
             toast('Error saving: ' + data.error, 'error');
         } else {
+            markClean();
             toast('Project saved.', 'success');
         }
     } catch (e) {
