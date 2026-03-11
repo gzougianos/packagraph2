@@ -4,7 +4,10 @@ import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParseResult;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.ImportDeclaration;
+import com.github.javaparser.ast.Modifier;
 import com.github.javaparser.ast.PackageDeclaration;
+import com.github.javaparser.ast.body.*;
+import com.packagraph2.model.ClassInfo;
 import com.packagraph2.model.DependencyGraph;
 import com.packagraph2.model.PackageNode;
 
@@ -27,16 +30,19 @@ public class DependencyAnalyzer {
         Set<String> internalPackages = new LinkedHashSet<>();
         // Map: source package -> set of imported packages
         Map<String, Set<String>> dependencies = new LinkedHashMap<>();
+        // Map: package -> list of class info
+        Map<String, List<ClassInfo>> packageClasses = new LinkedHashMap<>();
 
         for (String sourceDir : sourceDirectories) {
-            analyzeSourceDirectory(Path.of(sourceDir), internalPackages, dependencies);
+            analyzeSourceDirectory(Path.of(sourceDir), internalPackages, dependencies, packageClasses);
         }
 
-        return buildGraph(internalPackages, dependencies);
+        return buildGraph(internalPackages, dependencies, packageClasses);
     }
 
     private void analyzeSourceDirectory(Path sourceDir, Set<String> internalPackages,
-                                        Map<String, Set<String>> dependencies) throws IOException {
+                                        Map<String, Set<String>> dependencies,
+                                        Map<String, List<ClassInfo>> packageClasses) throws IOException {
         if (!Files.exists(sourceDir)) {
             return;
         }
@@ -45,7 +51,7 @@ public class DependencyAnalyzer {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
                 if (file.toString().endsWith(".java")) {
-                    analyzeFile(file, internalPackages, dependencies);
+                    analyzeFile(file, internalPackages, dependencies, packageClasses);
                 }
                 return FileVisitResult.CONTINUE;
             }
@@ -62,7 +68,8 @@ public class DependencyAnalyzer {
     }
 
     private void analyzeFile(Path file, Set<String> internalPackages,
-                             Map<String, Set<String>> dependencies) {
+                             Map<String, Set<String>> dependencies,
+                             Map<String, List<ClassInfo>> packageClasses) {
         try {
             ParseResult<CompilationUnit> result = parser.parse(file);
             if (!result.isSuccessful() || result.getResult().isEmpty()) {
@@ -78,6 +85,12 @@ public class DependencyAnalyzer {
 
             internalPackages.add(packageName);
 
+            // Collect type declarations from this file
+            List<ClassInfo> classes = packageClasses.computeIfAbsent(packageName, k -> new ArrayList<>());
+            for (TypeDeclaration<?> type : cu.getTypes()) {
+                classes.add(extractClassInfo(type));
+            }
+
             // Get all imports
             Set<String> importedPackages = dependencies.computeIfAbsent(packageName, k -> new LinkedHashSet<>());
 
@@ -92,6 +105,39 @@ public class DependencyAnalyzer {
         } catch (IOException e) {
             // Skip files we can't parse
         }
+    }
+
+    private ClassInfo extractClassInfo(TypeDeclaration<?> type) {
+        String name = type.getNameAsString();
+        String kind = resolveKind(type);
+        String scope = resolveScope(type);
+        return new ClassInfo(name, kind, scope);
+    }
+
+    private String resolveKind(TypeDeclaration<?> type) {
+        if (type instanceof EnumDeclaration) {
+            return "enum";
+        }
+        if (type instanceof AnnotationDeclaration) {
+            return "annotation";
+        }
+        if (type instanceof RecordDeclaration) {
+            return "record";
+        }
+        if (type instanceof ClassOrInterfaceDeclaration cid) {
+            return cid.isInterface() ? "interface" : "class";
+        }
+        return "class";
+    }
+
+    private String resolveScope(TypeDeclaration<?> type) {
+        var modifiers = type.getModifiers();
+        for (var mod : modifiers) {
+            if (mod.getKeyword() == Modifier.Keyword.PUBLIC) return "public";
+            if (mod.getKeyword() == Modifier.Keyword.PROTECTED) return "protected";
+            if (mod.getKeyword() == Modifier.Keyword.PRIVATE) return "private";
+        }
+        return "package-private";
     }
 
     /**
@@ -113,8 +159,10 @@ public class DependencyAnalyzer {
     }
 
     private DependencyGraph buildGraph(Set<String> internalPackages,
-                                       Map<String, Set<String>> dependencies) {
+                                       Map<String, Set<String>> dependencies,
+                                       Map<String, List<ClassInfo>> packageClasses) {
         DependencyGraph graph = new DependencyGraph();
+        graph.setPackageClasses(packageClasses);
 
         // Add all internal packages as nodes
         for (String pkg : internalPackages) {

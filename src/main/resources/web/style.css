@@ -788,6 +788,64 @@ body {
     margin: 4px 0;
 }
 
+/* ===== Classes List ===== */
+.classes-list {
+    max-height: 350px;
+    overflow-y: auto;
+    border: 1px solid #444;
+    border-radius: 4px;
+    background: #1a1a2e;
+    padding: 6px 0;
+}
+
+.class-item {
+    padding: 5px 12px;
+    font-size: 0.85rem;
+    font-family: monospace;
+    color: #ccc;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.class-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.class-name {
+    color: #5dade2;
+    flex: 1;
+}
+
+.class-kind, .class-scope {
+    font-size: 0.7rem;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-family: sans-serif;
+    white-space: nowrap;
+}
+
+.class-kind {
+    background: #2a2a4a;
+    border: 1px solid #444;
+}
+
+.class-kind-class       { color: #5dade2; }
+.class-kind-interface   { color: #a8e6cf; }
+.class-kind-enum        { color: #f0b27a; }
+.class-kind-record      { color: #d7bde2; }
+.class-kind-annotation  { color: #f9e79f; }
+
+.class-scope {
+    background: #1e1e3a;
+    border: 1px solid #3a3a5a;
+}
+
+.class-scope-public         { color: #82e0aa; }
+.class-scope-protected      { color: #f9e79f; }
+.class-scope-private        { color: #f1948a; }
+.class-scope-packageprivate { color: #aab7b8; }
+
 /* ===== Loading ===== */
 .loading-overlay {
     position: fixed;

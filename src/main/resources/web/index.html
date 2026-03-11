@@ -241,6 +241,19 @@
         <div class="context-menu-item" onclick="ctxSelectDependencies()">Select dependencies</div>
         <div class="context-menu-item" onclick="ctxSelectDependents()">Select dependents</div>
         <div class="context-menu-item" id="ctx-add-to-selection" onclick="ctxAddToSelection()">Add to selection</div>
+        <div class="context-menu-separator" id="ctx-classes-sep" style="display:none"></div>
+        <div class="context-menu-item" id="ctx-show-classes" onclick="ctxShowClasses()" style="display:none">Show all classes</div>
+    </div>
+
+    <!-- Classes dialog -->
+    <div id="classes-dialog" class="dialog-overlay" style="display:none">
+        <div class="dialog dialog-small">
+            <h2 id="classes-dialog-title">Classes</h2>
+            <div id="classes-dialog-list" class="classes-list"></div>
+            <div class="dialog-actions">
+                <button onclick="document.getElementById('classes-dialog').style.display='none'" class="btn btn-secondary">Close</button>
+            </div>
+        </div>
     </div>
 
     <!-- Group dialog (for context menu grouping) -->

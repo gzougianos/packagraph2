@@ -814,6 +814,15 @@ function showContextMenu(x, y, packageName) {
     const addToSel = document.getElementById('ctx-add-to-selection');
     addToSel.textContent = selectedNodes.has(packageName)
         ? 'Remove from selection' : 'Add to selection';
+
+    // Show/hide "Show all classes" (only for internal packages)
+    const node = state.config.graph.nodes.find(n => n.name === packageName);
+    const isInternal = node && !node.external;
+    const hasClasses = isInternal && state.config.graph.packageClasses
+        && state.config.graph.packageClasses[packageName]
+        && state.config.graph.packageClasses[packageName].length > 0;
+    document.getElementById('ctx-classes-sep').style.display = hasClasses ? '' : 'none';
+    document.getElementById('ctx-show-classes').style.display = hasClasses ? '' : 'none';
 }
 
 function hideContextMenu() {
@@ -937,6 +946,52 @@ function ctxAddToSelection() {
     }
     applySelectionHighlights();
     updateSelectionUI();
+    hideContextMenu();
+}
+
+function ctxShowClasses() {
+    if (!contextMenuNode) return;
+    const classes = (state.config.graph.packageClasses || {})[contextMenuNode] || [];
+    const title = document.getElementById('classes-dialog-title');
+    title.textContent = contextMenuNode;
+    const list = document.getElementById('classes-dialog-list');
+    list.innerHTML = '';
+    const sorted = [...classes].sort((a, b) => {
+        const nameA = typeof a === 'string' ? a : a.name;
+        const nameB = typeof b === 'string' ? b : b.name;
+        return nameA.localeCompare(nameB);
+    });
+    for (const cls of sorted) {
+        // Support both old string format and new ClassInfo format
+        const name = typeof cls === 'string' ? cls : cls.name;
+        const kind = typeof cls === 'string' ? null : cls.kind;
+        const scope = typeof cls === 'string' ? null : cls.scope;
+
+        const div = document.createElement('div');
+        div.className = 'class-item';
+
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'class-name';
+        nameSpan.textContent = name;
+        div.appendChild(nameSpan);
+
+        if (kind) {
+            const kindSpan = document.createElement('span');
+            kindSpan.className = 'class-kind class-kind-' + kind;
+            kindSpan.textContent = kind;
+            div.appendChild(kindSpan);
+        }
+
+        if (scope) {
+            const scopeSpan = document.createElement('span');
+            scopeSpan.className = 'class-scope class-scope-' + scope.replace('-', '');
+            scopeSpan.textContent = scope;
+            div.appendChild(scopeSpan);
+        }
+
+        list.appendChild(div);
+    }
+    document.getElementById('classes-dialog').style.display = 'flex';
     hideContextMenu();
 }
 

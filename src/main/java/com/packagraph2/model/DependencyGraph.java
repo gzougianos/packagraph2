@@ -6,6 +6,7 @@ public class DependencyGraph {
 
     private Set<PackageNode> nodes = new LinkedHashSet<>();
     private Set<Dependency> edges = new LinkedHashSet<>();
+    private Map<String, List<ClassInfo>> packageClasses = new LinkedHashMap<>();
 
     public DependencyGraph() {
     }
@@ -43,6 +44,18 @@ public class DependencyGraph {
 
     public void setEdges(Set<Dependency> edges) {
         this.edges = edges;
+    }
+
+    public Map<String, List<ClassInfo>> getPackageClasses() {
+        return packageClasses;
+    }
+
+    public void setPackageClasses(Map<String, List<ClassInfo>> packageClasses) {
+        this.packageClasses = packageClasses;
+    }
+
+    public void addClass(String packageName, ClassInfo classInfo) {
+        packageClasses.computeIfAbsent(packageName, k -> new ArrayList<>()).add(classInfo);
     }
 
     public Set<String> getInternalPackageNames() {
