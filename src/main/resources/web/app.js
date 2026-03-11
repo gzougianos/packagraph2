@@ -65,6 +65,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     initSidebarResizer();
     initGraphInteraction();
     initKeyboardShortcuts();
+    initBeforeUnload();
 });
 
 // =============================================================================
@@ -1628,6 +1629,15 @@ function initGraphInteraction() {
 // =============================================================================
 // Keyboard Shortcuts
 // =============================================================================
+function initBeforeUnload() {
+    window.addEventListener('beforeunload', (e) => {
+        if (dirty) {
+            e.preventDefault();
+            e.returnValue = '';
+        }
+    });
+}
+
 function initKeyboardShortcuts() {
     document.addEventListener('keydown', (e) => {
         // Ctrl+Z / Cmd+Z = Undo
