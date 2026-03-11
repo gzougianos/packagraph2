@@ -7,6 +7,8 @@ public class DependencyGraph {
     private Set<PackageNode> nodes = new LinkedHashSet<>();
     private Set<Dependency> edges = new LinkedHashSet<>();
     private Map<String, List<ClassInfo>> packageClasses = new LinkedHashMap<>();
+    // edgeDetails: fromPackage -> toPackage -> list of import details
+    private Map<String, Map<String, List<ImportDetail>>> edgeDetails = new LinkedHashMap<>();
 
     public DependencyGraph() {
     }
@@ -56,6 +58,21 @@ public class DependencyGraph {
 
     public void addClass(String packageName, ClassInfo classInfo) {
         packageClasses.computeIfAbsent(packageName, k -> new ArrayList<>()).add(classInfo);
+    }
+
+    public Map<String, Map<String, List<ImportDetail>>> getEdgeDetails() {
+        return edgeDetails;
+    }
+
+    public void setEdgeDetails(Map<String, Map<String, List<ImportDetail>>> edgeDetails) {
+        this.edgeDetails = edgeDetails;
+    }
+
+    public void addEdgeDetail(String fromPackage, String toPackage, ImportDetail detail) {
+        edgeDetails
+                .computeIfAbsent(fromPackage, k -> new LinkedHashMap<>())
+                .computeIfAbsent(toPackage, k -> new ArrayList<>())
+                .add(detail);
     }
 
     public Set<String> getInternalPackageNames() {

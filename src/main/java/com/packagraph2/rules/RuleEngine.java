@@ -55,6 +55,17 @@ public class RuleEngine {
         graph.getEdges().removeIf(edge ->
                 hiddenPackages.contains(edge.getFromPackage()) ||
                 hiddenPackages.contains(edge.getToPackage()));
+
+        // Remove edge details for hidden packages
+        var details = graph.getEdgeDetails();
+        for (String hidden : hiddenPackages) {
+            details.remove(hidden);
+        }
+        for (var innerMap : details.values()) {
+            for (String hidden : hiddenPackages) {
+                innerMap.remove(hidden);
+            }
+        }
     }
 
     private void applyGroupingRule(DependencyGraph graph, GroupingRule rule) {
@@ -89,6 +100,23 @@ public class RuleEngine {
             newEdges.add(new Dependency(from, to));
         }
         graph.setEdges(newEdges);
+
+        // Rewrite edge details: merge matched package entries under the group name
+        var details = graph.getEdgeDetails();
+        var newDetails = new LinkedHashMap<String, Map<String, List<ImportDetail>>>();
+        for (var fromEntry : details.entrySet()) {
+            String newFrom = matchedPackages.contains(fromEntry.getKey())
+                    ? rule.getDisplayName() : fromEntry.getKey();
+            var targetMap = newDetails.computeIfAbsent(newFrom, k -> new LinkedHashMap<>());
+            for (var toEntry : fromEntry.getValue().entrySet()) {
+                String newTo = matchedPackages.contains(toEntry.getKey())
+                        ? rule.getDisplayName() : toEntry.getKey();
+                // Skip self-references within the group
+                if (newFrom.equals(newTo)) continue;
+                targetMap.computeIfAbsent(newTo, k -> new ArrayList<>()).addAll(toEntry.getValue());
+            }
+        }
+        graph.setEdgeDetails(newDetails);
     }
 
     /**
@@ -131,6 +159,19 @@ public class RuleEngine {
         }
         for (Dependency edge : original.getEdges()) {
             copy.addEdge(new Dependency(edge.getFromPackage(), edge.getToPackage()));
+        }
+        // Deep copy edge details
+        var origDetails = original.getEdgeDetails();
+        if (origDetails != null) {
+            var copyDetails = new LinkedHashMap<String, Map<String, List<ImportDetail>>>();
+            for (var fromEntry : origDetails.entrySet()) {
+                var innerCopy = new LinkedHashMap<String, List<ImportDetail>>();
+                for (var toEntry : fromEntry.getValue().entrySet()) {
+                    innerCopy.put(toEntry.getKey(), new ArrayList<>(toEntry.getValue()));
+                }
+                copyDetails.put(fromEntry.getKey(), innerCopy);
+            }
+            copy.setEdgeDetails(copyDetails);
         }
         return copy;
     }

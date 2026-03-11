@@ -429,6 +429,18 @@ body {
     opacity: 0.08;
 }
 
+#graph-container .edge {
+    cursor: pointer;
+}
+
+#graph-container .edge:hover path {
+    stroke-width: 2.5;
+}
+
+#graph-container .edge:hover polygon {
+    stroke-width: 2;
+}
+
 #graph-container .node.selected polygon,
 #graph-container .node.selected ellipse,
 #graph-container .node.selected path {
@@ -786,6 +798,42 @@ body {
     height: 1px;
     background: #444;
     margin: 4px 0;
+}
+
+/* ===== Edge Details ===== */
+.edge-details-list {
+    max-height: 400px;
+    overflow-y: auto;
+    border: 1px solid #444;
+    border-radius: 4px;
+    background: #1a1a2e;
+    padding: 6px 0;
+}
+
+.edge-detail-item {
+    padding: 4px 12px;
+    font-size: 0.85rem;
+    font-family: monospace;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.edge-detail-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.edge-detail-source {
+    color: #5dade2;
+}
+
+.edge-detail-arrow {
+    color: #666;
+    font-size: 0.75rem;
+}
+
+.edge-detail-imported {
+    color: #a8e6cf;
 }
 
 /* ===== Classes List ===== */

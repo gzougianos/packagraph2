@@ -245,6 +245,17 @@
         <div class="context-menu-item" id="ctx-show-classes" onclick="ctxShowClasses()" style="display:none">Show all classes</div>
     </div>
 
+    <!-- Edge details dialog -->
+    <div id="edge-dialog" class="dialog-overlay" style="display:none">
+        <div class="dialog dialog-small">
+            <h2 id="edge-dialog-title">Edge Details</h2>
+            <div id="edge-dialog-list" class="edge-details-list"></div>
+            <div class="dialog-actions">
+                <button onclick="document.getElementById('edge-dialog').style.display='none'" class="btn btn-secondary">Close</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Classes dialog -->
     <div id="classes-dialog" class="dialog-overlay" style="display:none">
         <div class="dialog dialog-small">

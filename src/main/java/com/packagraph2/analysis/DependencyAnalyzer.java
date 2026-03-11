@@ -9,6 +9,7 @@ import com.github.javaparser.ast.PackageDeclaration;
 import com.github.javaparser.ast.body.*;
 import com.packagraph2.model.ClassInfo;
 import com.packagraph2.model.DependencyGraph;
+import com.packagraph2.model.ImportDetail;
 import com.packagraph2.model.PackageNode;
 
 import java.io.IOException;
@@ -32,17 +33,20 @@ public class DependencyAnalyzer {
         Map<String, Set<String>> dependencies = new LinkedHashMap<>();
         // Map: package -> list of class info
         Map<String, List<ClassInfo>> packageClasses = new LinkedHashMap<>();
+        // Map: fromPackage -> toPackage -> list of import details
+        Map<String, Map<String, List<ImportDetail>>> edgeDetails = new LinkedHashMap<>();
 
         for (String sourceDir : sourceDirectories) {
-            analyzeSourceDirectory(Path.of(sourceDir), internalPackages, dependencies, packageClasses);
+            analyzeSourceDirectory(Path.of(sourceDir), internalPackages, dependencies, packageClasses, edgeDetails);
         }
 
-        return buildGraph(internalPackages, dependencies, packageClasses);
+        return buildGraph(internalPackages, dependencies, packageClasses, edgeDetails);
     }
 
     private void analyzeSourceDirectory(Path sourceDir, Set<String> internalPackages,
                                         Map<String, Set<String>> dependencies,
-                                        Map<String, List<ClassInfo>> packageClasses) throws IOException {
+                                        Map<String, List<ClassInfo>> packageClasses,
+                                        Map<String, Map<String, List<ImportDetail>>> edgeDetails) throws IOException {
         if (!Files.exists(sourceDir)) {
             return;
         }
@@ -51,7 +55,7 @@ public class DependencyAnalyzer {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
                 if (file.toString().endsWith(".java")) {
-                    analyzeFile(file, internalPackages, dependencies, packageClasses);
+                    analyzeFile(file, internalPackages, dependencies, packageClasses, edgeDetails);
                 }
                 return FileVisitResult.CONTINUE;
             }
@@ -69,7 +73,8 @@ public class DependencyAnalyzer {
 
     private void analyzeFile(Path file, Set<String> internalPackages,
                              Map<String, Set<String>> dependencies,
-                             Map<String, List<ClassInfo>> packageClasses) {
+                             Map<String, List<ClassInfo>> packageClasses,
+                             Map<String, Map<String, List<ImportDetail>>> edgeDetails) {
         try {
             ParseResult<CompilationUnit> result = parser.parse(file);
             if (!result.isSuccessful() || result.getResult().isEmpty()) {
@@ -91,6 +96,9 @@ public class DependencyAnalyzer {
                 classes.add(extractClassInfo(type));
             }
 
+            // The primary type name in this file (used as sourceClass for edge details)
+            String sourceClass = file.getFileName().toString().replace(".java", "");
+
             // Get all imports
             Set<String> importedPackages = dependencies.computeIfAbsent(packageName, k -> new LinkedHashSet<>());
 
@@ -100,6 +108,13 @@ public class DependencyAnalyzer {
 
                 if (importedPackage != null && !importedPackage.equals(packageName)) {
                     importedPackages.add(importedPackage);
+
+                    // Track the specific import detail
+                    String importedClass = imp.isAsterisk() ? "*" : extractClassName(importName);
+                    edgeDetails
+                            .computeIfAbsent(packageName, k -> new LinkedHashMap<>())
+                            .computeIfAbsent(importedPackage, k -> new ArrayList<>())
+                            .add(new ImportDetail(sourceClass, importedClass));
                 }
             }
         } catch (IOException e) {
@@ -158,11 +173,21 @@ public class DependencyAnalyzer {
         return null;
     }
 
+    private String extractClassName(String importName) {
+        int lastDot = importName.lastIndexOf('.');
+        if (lastDot >= 0) {
+            return importName.substring(lastDot + 1);
+        }
+        return importName;
+    }
+
     private DependencyGraph buildGraph(Set<String> internalPackages,
                                        Map<String, Set<String>> dependencies,
-                                       Map<String, List<ClassInfo>> packageClasses) {
+                                       Map<String, List<ClassInfo>> packageClasses,
+                                       Map<String, Map<String, List<ImportDetail>>> edgeDetails) {
         DependencyGraph graph = new DependencyGraph();
         graph.setPackageClasses(packageClasses);
+        graph.setEdgeDetails(edgeDetails);
 
         // Add all internal packages as nodes
         for (String pkg : internalPackages) {

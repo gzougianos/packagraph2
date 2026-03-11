@@ -3,6 +3,7 @@ package com.packagraph2.dot;
 import com.packagraph2.model.*;
 import com.packagraph2.rules.RuleEngine;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -14,11 +15,14 @@ public class DotGenerator {
 
     private final RuleEngine ruleEngine = new RuleEngine();
 
+    public record DotResult(String dot, Map<String, Map<String, List<ImportDetail>>> edgeDetails) {}
+
     /**
      * Generates a DOT string from the given project configuration.
      * Applies rules, detects cycles, and formats the graph.
+     * Returns both the DOT string and the processed edge details.
      */
-    public String generate(DependencyGraph rawGraph, ProjectConfig config) {
+    public DotResult generate(DependencyGraph rawGraph, ProjectConfig config) {
         // Apply rules to get the filtered graph
         DependencyGraph graph = ruleEngine.applyRules(
                 rawGraph,
@@ -97,7 +101,7 @@ public class DotGenerator {
         }
 
         dot.append("}\n");
-        return dot.toString();
+        return new DotResult(dot.toString(), graph.getEdgeDetails());
     }
 
     private String findCommonPrefix(DependencyGraph graph) {

@@ -42,6 +42,7 @@ let dirty = false;
 
 // Tooltip
 let tooltipEl = null;
+let processedEdgeDetails = {};
 
 // =============================================================================
 // Initialization
@@ -435,6 +436,9 @@ async function renderGraph() {
                 return;
             }
 
+            // Store processed edge details for edge click dialog
+            processedEdgeDetails = data.edgeDetails || {};
+
             const svg = vizInstance.renderSVGElement(data.dot);
             const container = document.getElementById('graph-container');
             container.innerHTML = '';
@@ -493,6 +497,22 @@ function attachSvgInteraction(svg) {
         node.addEventListener('mouseenter', (e) => showTooltip(e, packageName));
         node.addEventListener('mouseleave', hideTooltip);
         node.addEventListener('mousemove', moveTooltip);
+    });
+
+    // Edge click handlers
+    const edges = svg.querySelectorAll('.edge');
+    edges.forEach(edge => {
+        const titleEl = edge.querySelector('title');
+        if (!titleEl) return;
+        const parts = titleEl.textContent.split('->');
+        if (parts.length !== 2) return;
+        const fromPkg = parts[0].trim();
+        const toPkg = parts[1].trim();
+
+        edge.addEventListener('click', (e) => {
+            e.stopPropagation();
+            showEdgeDetails(fromPkg, toPkg);
+        });
     });
 }
 
@@ -993,6 +1013,51 @@ function ctxShowClasses() {
     }
     document.getElementById('classes-dialog').style.display = 'flex';
     hideContextMenu();
+}
+
+function showEdgeDetails(fromPkg, toPkg) {
+    const details = (processedEdgeDetails[fromPkg] || {})[toPkg] || [];
+    const title = document.getElementById('edge-dialog-title');
+    title.textContent = fromPkg + '  \u2192  ' + toPkg;
+    const list = document.getElementById('edge-dialog-list');
+    list.innerHTML = '';
+
+    if (details.length === 0) {
+        const div = document.createElement('div');
+        div.className = 'edge-detail-item';
+        div.style.color = '#888';
+        div.textContent = 'No import details available';
+        list.appendChild(div);
+    } else {
+        // Sort by sourceClass then importedClass
+        const sorted = [...details].sort((a, b) => {
+            const cmp = (a.sourceClass || '').localeCompare(b.sourceClass || '');
+            return cmp !== 0 ? cmp : (a.importedClass || '').localeCompare(b.importedClass || '');
+        });
+        for (const detail of sorted) {
+            const div = document.createElement('div');
+            div.className = 'edge-detail-item';
+
+            const src = document.createElement('span');
+            src.className = 'edge-detail-source';
+            src.textContent = detail.sourceClass;
+            div.appendChild(src);
+
+            const arrow = document.createElement('span');
+            arrow.className = 'edge-detail-arrow';
+            arrow.textContent = '\u2192';
+            div.appendChild(arrow);
+
+            const imp = document.createElement('span');
+            imp.className = 'edge-detail-imported';
+            imp.textContent = detail.importedClass;
+            div.appendChild(imp);
+
+            list.appendChild(div);
+        }
+    }
+
+    document.getElementById('edge-dialog').style.display = 'flex';
 }
 
 // Group dialog callbacks

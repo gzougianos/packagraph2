@@ -89,8 +89,8 @@ public class WebServer {
                 ctx.status(400).json(Map.of("error", "No graph data provided"));
                 return;
             }
-            String dot = dotGenerator.generate(config.getGraph(), config);
-            ctx.json(Map.of("dot", dot));
+            var result = dotGenerator.generate(config.getGraph(), config);
+            ctx.json(Map.of("dot", result.dot(), "edgeDetails", result.edgeDetails()));
         } catch (Exception e) {
             ctx.status(500).json(Map.of("error", e.getMessage()));
         }
