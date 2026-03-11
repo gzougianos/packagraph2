@@ -1,0 +1,385 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: #1a1a2e;
+    color: #e0e0e0;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* Landing Page */
+.landing-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+}
+
+.landing-container h1 {
+    font-size: 3rem;
+    color: #e0e0e0;
+    margin-bottom: 0.5rem;
+}
+
+.subtitle {
+    color: #888;
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+}
+
+.landing-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+/* Buttons */
+.btn {
+    padding: 8px 16px;
+    border: 1px solid #444;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    background: #2a2a3e;
+    color: #e0e0e0;
+    transition: background 0.2s;
+}
+
+.btn:hover {
+    background: #3a3a4e;
+}
+
+.btn-primary {
+    background: #2980b9;
+    border-color: #2980b9;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #3498db;
+}
+
+.btn-secondary {
+    background: #444;
+    border-color: #555;
+}
+
+.btn-large {
+    padding: 14px 28px;
+    font-size: 1.1rem;
+}
+
+.btn-small {
+    padding: 4px 10px;
+    font-size: 0.8rem;
+}
+
+.btn-danger {
+    color: #e74c3c;
+    border-color: #e74c3c;
+}
+
+.btn-danger:hover {
+    background: #e74c3c;
+    color: white;
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Dialogs */
+.dialog-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+}
+
+.dialog {
+    background: #2a2a3e;
+    border: 1px solid #444;
+    border-radius: 10px;
+    padding: 24px;
+    width: 500px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.dialog h2 {
+    margin-bottom: 16px;
+    color: #e0e0e0;
+}
+
+.dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+/* Forms */
+.form-group {
+    margin-bottom: 12px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 0.85rem;
+    color: #aaa;
+}
+
+.form-group input[type="text"],
+.form-group select {
+    width: 100%;
+    padding: 8px 10px;
+    background: #1a1a2e;
+    border: 1px solid #444;
+    border-radius: 4px;
+    color: #e0e0e0;
+    font-size: 0.9rem;
+}
+
+.form-group input[type="text"]:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #2980b9;
+}
+
+.checkbox-list {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #444;
+    border-radius: 4px;
+    padding: 8px;
+    background: #1a1a2e;
+}
+
+.checkbox-list label {
+    display: block;
+    padding: 4px 0;
+    font-size: 0.85rem;
+    color: #ccc;
+    cursor: pointer;
+}
+
+.checkbox-list label:hover {
+    color: #fff;
+}
+
+/* Main App Layout */
+.app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 16px;
+    background: #16213e;
+    border-bottom: 1px solid #333;
+    height: 48px;
+}
+
+.app-header h1 {
+    font-size: 1.1rem;
+    color: #e0e0e0;
+}
+
+.header-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.app-body {
+    display: flex;
+    height: calc(100vh - 48px);
+}
+
+/* Graph Panel */
+.graph-panel {
+    flex: 1;
+    overflow: auto;
+    background: #1a1a2e;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#graph-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: auto;
+}
+
+#graph-container svg {
+    max-width: 100%;
+    max-height: 100%;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 320px;
+    min-width: 250px;
+    max-width: 600px;
+    background: #16213e;
+    border-left: 1px solid #333;
+    overflow-y: auto;
+    padding: 16px;
+    position: relative;
+}
+
+.sidebar-resizer {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    cursor: col-resize;
+    background: transparent;
+}
+
+.sidebar-resizer:hover {
+    background: #2980b9;
+}
+
+.sidebar-section {
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #333;
+}
+
+.sidebar-section h3 {
+    font-size: 0.9rem;
+    color: #aaa;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 10px;
+}
+
+/* Rules List */
+.rule-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 0;
+    font-size: 0.85rem;
+}
+
+.rule-item .rule-text {
+    flex: 1;
+    color: #ccc;
+}
+
+.rule-item .rule-text.disabled {
+    color: #666;
+    text-decoration: line-through;
+}
+
+.rule-item .rule-arrow {
+    color: #2980b9;
+}
+
+.add-rule-form {
+    display: flex;
+    gap: 4px;
+    margin-top: 8px;
+}
+
+.add-rule-form input {
+    flex: 1;
+    padding: 4px 8px;
+    background: #1a1a2e;
+    border: 1px solid #444;
+    border-radius: 4px;
+    color: #e0e0e0;
+    font-size: 0.8rem;
+}
+
+.add-rule-form input:focus {
+    outline: none;
+    border-color: #2980b9;
+}
+
+/* Package List */
+.package-list {
+    max-height: 300px;
+    overflow-y: auto;
+    margin-top: 8px;
+}
+
+.package-item {
+    padding: 3px 0;
+    font-size: 0.8rem;
+    color: #ccc;
+    font-family: monospace;
+}
+
+.package-item.external {
+    color: #888;
+}
+
+.package-item.internal {
+    color: #5dade2;
+}
+
+#package-search {
+    width: 100%;
+    padding: 6px 8px;
+    background: #1a1a2e;
+    border: 1px solid #444;
+    border-radius: 4px;
+    color: #e0e0e0;
+    font-size: 0.85rem;
+}
+
+#package-search:focus {
+    outline: none;
+    border-color: #2980b9;
+}
+
+/* Loading Overlay */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #333;
+    border-top-color: #2980b9;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin-bottom: 12px;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.loading-overlay p {
+    color: #aaa;
+}

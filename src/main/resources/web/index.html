@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>packagraph2</title>
+    <link rel="stylesheet" href="/style.css">
+    <script src="https://unpkg.com/@viz-js/viz@3.11.0/lib/viz-standalone.js"></script>
+</head>
+<body>
+    <!-- Landing Page -->
+    <div id="landing-page" class="page">
+        <div class="landing-container">
+            <h1>packagraph2</h1>
+            <p class="subtitle">Java Package Dependency Browser</p>
+            <div class="landing-actions">
+                <button onclick="showCreateProject()" class="btn btn-primary btn-large">Create New Project</button>
+                <button onclick="showOpenProject()" class="btn btn-secondary btn-large">Open Project</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Project Dialog -->
+    <div id="create-dialog" class="dialog-overlay" style="display:none">
+        <div class="dialog">
+            <h2>Create New Project</h2>
+            <div class="form-group">
+                <label>Project Name</label>
+                <input type="text" id="create-name" placeholder="e.g., fancyapp">
+            </div>
+            <div class="form-group">
+                <label>Root Directory (absolute path)</label>
+                <input type="text" id="create-root" placeholder="/path/to/your/java/project">
+                <button onclick="scanSources()" class="btn btn-small">Scan for Sources</button>
+            </div>
+            <div id="source-dirs-section" style="display:none">
+                <label>Source Directories (select which to include)</label>
+                <div id="source-dirs-list" class="checkbox-list"></div>
+            </div>
+            <div class="dialog-actions">
+                <button onclick="hideDialogs()" class="btn btn-secondary">Cancel</button>
+                <button onclick="createProject()" class="btn btn-primary" id="create-btn" disabled>Create & Analyze</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Open Project Dialog -->
+    <div id="open-dialog" class="dialog-overlay" style="display:none">
+        <div class="dialog">
+            <h2>Open Project</h2>
+            <div class="form-group">
+                <label>Project File Path (.pg2)</label>
+                <input type="text" id="open-path" placeholder="/path/to/project.pg2">
+            </div>
+            <div class="dialog-actions">
+                <button onclick="hideDialogs()" class="btn btn-secondary">Cancel</button>
+                <button onclick="openProject()" class="btn btn-primary">Open</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div id="main-app" class="page" style="display:none">
+        <div class="app-header">
+            <h1 id="project-title">packagraph2</h1>
+            <div class="header-actions">
+                <button onclick="reanalyze()" class="btn btn-small">Re-analyze</button>
+                <button onclick="saveProject()" class="btn btn-primary btn-small">Save</button>
+            </div>
+        </div>
+        <div class="app-body">
+            <!-- Graph Panel -->
+            <div class="graph-panel" id="graph-panel">
+                <div id="graph-container"></div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="sidebar" id="sidebar">
+                <div class="sidebar-resizer" id="sidebar-resizer"></div>
+
+                <!-- Graph Options -->
+                <div class="sidebar-section">
+                    <h3>Graph Options</h3>
+                    <div class="form-group">
+                        <label>Direction</label>
+                        <select id="opt-direction" onchange="onConfigChanged()">
+                            <option value="TOP_TO_BOTTOM">Top to Bottom</option>
+                            <option value="BOTTOM_TO_TOP">Bottom to Top</option>
+                            <option value="LEFT_TO_RIGHT">Left to Right</option>
+                            <option value="RIGHT_TO_LEFT">Right to Left</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="opt-circular" checked onchange="onConfigChanged()">
+                            Highlight Circular Dependencies
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="opt-trim-prefix" onchange="onConfigChanged()">
+                            Trim Common Prefix
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Grouping Rules -->
+                <div class="sidebar-section">
+                    <h3>Grouping Rules</h3>
+                    <div id="grouping-rules-list"></div>
+                    <div class="add-rule-form">
+                        <input type="text" id="group-pattern" placeholder="Pattern (e.g., org.spring.**)">
+                        <input type="text" id="group-name" placeholder="Display name (e.g., Spring)">
+                        <button onclick="addGroupingRule()" class="btn btn-small">Add</button>
+                    </div>
+                </div>
+
+                <!-- Hide Rules -->
+                <div class="sidebar-section">
+                    <h3>Hide Rules</h3>
+                    <div id="hide-rules-list"></div>
+                    <div class="add-rule-form">
+                        <input type="text" id="hide-pattern" placeholder="Pattern (e.g., java.**)">
+                        <button onclick="addHideRule()" class="btn btn-small">Add</button>
+                    </div>
+                </div>
+
+                <!-- Packages List -->
+                <div class="sidebar-section">
+                    <h3>Packages</h3>
+                    <input type="text" id="package-search" placeholder="Search packages..." oninput="filterPackageList()">
+                    <div id="packages-list" class="package-list"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading overlay -->
+    <div id="loading" class="loading-overlay" style="display:none">
+        <div class="spinner"></div>
+        <p id="loading-text">Loading...</p>
+    </div>
+
+    <script src="/app.js"></script>
+</body>
+</html>
