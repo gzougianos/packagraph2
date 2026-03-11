@@ -10,6 +10,7 @@ public class GroupingRule {
     private String pattern;
     private String displayName;
     private boolean enabled;
+    private String categoryId;
 
     public GroupingRule() {
         this.id = UUID.randomUUID().toString();
@@ -20,11 +21,13 @@ public class GroupingRule {
     public GroupingRule(@JsonProperty("id") String id,
                        @JsonProperty("pattern") String pattern,
                        @JsonProperty("displayName") String displayName,
-                       @JsonProperty("enabled") boolean enabled) {
+                       @JsonProperty("enabled") boolean enabled,
+                       @JsonProperty("categoryId") String categoryId) {
         this.id = id != null ? id : UUID.randomUUID().toString();
         this.pattern = pattern;
         this.displayName = displayName;
         this.enabled = enabled;
+        this.categoryId = categoryId;
     }
 
     public String getId() {
@@ -57,5 +60,13 @@ public class GroupingRule {
 
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
+    }
+
+    public String getCategoryId() {
+        return categoryId;
+    }
+
+    public void setCategoryId(String categoryId) {
+        this.categoryId = categoryId;
     }
 }

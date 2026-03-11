@@ -508,6 +508,97 @@ body {
     border-color: #2980b9;
 }
 
+/* ===== Categories ===== */
+.color-input {
+    width: 32px;
+    height: 28px;
+    border: 1px solid #444;
+    border-radius: 4px;
+    background: #1a1a2e;
+    cursor: pointer;
+    padding: 1px;
+    flex-shrink: 0;
+}
+
+.cat-select {
+    padding: 4px 6px;
+    background: #1a1a2e;
+    border: 1px solid #444;
+    border-radius: 4px;
+    color: #e0e0e0;
+    font-size: 0.8rem;
+    flex-shrink: 0;
+    max-width: 120px;
+}
+
+.cat-select:focus {
+    outline: none;
+    border-color: #2980b9;
+}
+
+.add-rule-form-wrap {
+    flex-wrap: wrap;
+}
+
+.category-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0;
+    font-size: 0.82rem;
+}
+
+.category-swatch {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    flex-shrink: 0;
+    border: 1px solid rgba(255,255,255,0.15);
+}
+
+.category-name {
+    flex: 1;
+    color: #ccc;
+}
+
+/* ===== Legend ===== */
+.legend {
+    position: absolute;
+    bottom: 12px;
+    left: 12px;
+    background: rgba(22, 33, 62, 0.9);
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 10px 14px;
+    z-index: 5;
+    max-width: 250px;
+}
+
+.legend-title {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #8899aa;
+    margin-bottom: 6px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 2px 0;
+    font-size: 0.78rem;
+    color: #ccc;
+}
+
+.legend-swatch {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    flex-shrink: 0;
+    border: 1px solid rgba(255,255,255,0.15);
+}
+
 /* ===== Context Menu ===== */
 .context-menu {
     position: fixed;

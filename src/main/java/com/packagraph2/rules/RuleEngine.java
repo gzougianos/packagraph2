@@ -77,7 +77,7 @@ public class RuleEngine {
                 .allMatch(PackageNode::isExternal);
 
         graph.getNodes().removeIf(n -> matchedPackages.contains(n.getName()));
-        graph.addNode(new PackageNode(rule.getDisplayName(), allExternal));
+        graph.addNode(new PackageNode(rule.getDisplayName(), allExternal, rule.getCategoryId()));
 
         // Rewrite edges: replace matched package names with the group display name
         Set<Dependency> newEdges = new LinkedHashSet<>();

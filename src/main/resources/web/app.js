@@ -7,6 +7,7 @@ let state = {
         name: '',
         rootDirectory: '',
         sourceDirectories: [],
+        categories: [],
         groupingRules: [],
         hideRules: [],
         graphDirection: 'TOP_TO_BOTTOM',
@@ -158,6 +159,7 @@ async function createProject() {
             name: name,
             rootDirectory: rootDir,
             sourceDirectories: selectedDirs,
+            categories: [],
             groupingRules: [],
             hideRules: [],
             graphDirection: 'TOP_TO_BOTTOM',
@@ -223,8 +225,10 @@ function showMainApp() {
     document.getElementById('opt-circular').checked = state.config.highlightCircularDependencies;
     document.getElementById('opt-trim-prefix').checked = state.config.trimCommonPrefix;
 
+    renderCategoriesList();
     renderRulesList();
     renderPackageList();
+    renderLegend();
     renderGraph();
 }
 
@@ -763,6 +767,7 @@ function cancelGroupDialog() {
 function confirmGroupDialog() {
     const pattern = document.getElementById('group-dialog-pattern').value.trim();
     const name = document.getElementById('group-dialog-name').value.trim();
+    const categoryId = document.getElementById('group-dialog-category').value || null;
     if (!pattern || !name) {
         toast('Pattern and name are required.', 'error');
         return;
@@ -772,10 +777,13 @@ function confirmGroupDialog() {
         id: crypto.randomUUID(),
         pattern: pattern,
         displayName: name,
-        enabled: true
+        enabled: true,
+        categoryId: categoryId
     });
     clearSelection();
+    renderCategoriesList();
     renderRulesList();
+    renderLegend();
     renderGraph();
     document.getElementById('group-dialog').style.display = 'none';
     toast('Group created: ' + name, 'success');
@@ -832,6 +840,7 @@ function hideTooltip() {
 // =============================================================================
 function pushUndo() {
     const snapshot = JSON.stringify({
+        categories: state.config.categories,
         groupingRules: state.config.groupingRules,
         hideRules: state.config.hideRules,
         graphDirection: state.config.graphDirection,
@@ -846,6 +855,7 @@ function pushUndo() {
 function undo() {
     if (undoStack.length === 0) return;
     const current = JSON.stringify({
+        categories: state.config.categories,
         groupingRules: state.config.groupingRules,
         hideRules: state.config.hideRules,
         graphDirection: state.config.graphDirection,
@@ -855,6 +865,7 @@ function undo() {
     redoStack.push(current);
 
     const snapshot = JSON.parse(undoStack.pop());
+    state.config.categories = snapshot.categories;
     state.config.groupingRules = snapshot.groupingRules;
     state.config.hideRules = snapshot.hideRules;
     state.config.graphDirection = snapshot.graphDirection;
@@ -870,6 +881,7 @@ function undo() {
 function redo() {
     if (redoStack.length === 0) return;
     const current = JSON.stringify({
+        categories: state.config.categories,
         groupingRules: state.config.groupingRules,
         hideRules: state.config.hideRules,
         graphDirection: state.config.graphDirection,
@@ -879,6 +891,7 @@ function redo() {
     undoStack.push(current);
 
     const snapshot = JSON.parse(redoStack.pop());
+    state.config.categories = snapshot.categories;
     state.config.groupingRules = snapshot.groupingRules;
     state.config.hideRules = snapshot.hideRules;
     state.config.graphDirection = snapshot.graphDirection;
@@ -900,6 +913,8 @@ function syncUIFromConfig() {
     document.getElementById('opt-direction').value = state.config.graphDirection;
     document.getElementById('opt-circular').checked = state.config.highlightCircularDependencies;
     document.getElementById('opt-trim-prefix').checked = state.config.trimCommonPrefix;
+    renderCategoriesList();
+    renderLegend();
 }
 
 // =============================================================================
@@ -919,6 +934,7 @@ function onConfigChanged() {
 function addGroupingRule() {
     const pattern = document.getElementById('group-pattern').value.trim();
     const displayName = document.getElementById('group-name').value.trim();
+    const categoryId = document.getElementById('group-category').value || null;
     if (!pattern || !displayName) return;
 
     pushUndo();
@@ -926,13 +942,15 @@ function addGroupingRule() {
         id: crypto.randomUUID(),
         pattern: pattern,
         displayName: displayName,
-        enabled: true
+        enabled: true,
+        categoryId: categoryId
     });
 
     document.getElementById('group-pattern').value = '';
     document.getElementById('group-name').value = '';
 
     renderRulesList();
+    renderLegend();
     renderGraph();
 }
 
@@ -942,6 +960,7 @@ function toggleGroupingRule(id) {
     if (rule) {
         rule.enabled = !rule.enabled;
         renderRulesList();
+        renderLegend();
         renderGraph();
     }
 }
@@ -950,6 +969,7 @@ function removeGroupingRule(id) {
     pushUndo();
     state.config.groupingRules = state.config.groupingRules.filter(r => r.id !== id);
     renderRulesList();
+    renderLegend();
     renderGraph();
 }
 
@@ -998,11 +1018,17 @@ function renderRulesList() {
     const groupList = document.getElementById('grouping-rules-list');
     groupList.innerHTML = '';
     state.config.groupingRules.forEach(rule => {
+        const cat = rule.categoryId ? state.config.categories.find(c => c.id === rule.categoryId) : null;
+        const swatchHtml = cat
+            ? '<span class="category-swatch" style="background:' + escapeHtml(cat.color) + '" title="' + escapeHtml(cat.name) + '"></span>'
+            : '';
+
         const div = document.createElement('div');
         div.className = 'rule-item';
         div.innerHTML =
             '<input type="checkbox" ' + (rule.enabled ? 'checked' : '') +
             ' onchange="toggleGroupingRule(\'' + rule.id + '\')">' +
+            swatchHtml +
             '<span class="rule-text ' + (rule.enabled ? '' : 'disabled') + '" title="' + escapeHtml(rule.pattern) + '">' +
             escapeHtml(rule.pattern) + '</span>' +
             '<span class="rule-arrow">&rarr;</span>' +
@@ -1025,6 +1051,116 @@ function renderRulesList() {
             escapeHtml(rule.pattern) + '</span>' +
             '<button onclick="removeHideRule(\'' + rule.id + '\')" class="btn btn-danger btn-small">&times;</button>';
         hideList.appendChild(div);
+    });
+}
+
+// =============================================================================
+// Categories
+// =============================================================================
+function addCategory() {
+    const name = document.getElementById('cat-name').value.trim();
+    const color = document.getElementById('cat-color').value;
+    if (!name) return;
+
+    pushUndo();
+    state.config.categories.push({
+        id: crypto.randomUUID(),
+        name: name,
+        color: color
+    });
+
+    document.getElementById('cat-name').value = '';
+    renderCategoriesList();
+    renderLegend();
+    updateCategoryDropdowns();
+}
+
+function removeCategory(id) {
+    pushUndo();
+    state.config.categories = state.config.categories.filter(c => c.id !== id);
+    // Remove categoryId from any grouping rules that used this category
+    state.config.groupingRules.forEach(r => {
+        if (r.categoryId === id) r.categoryId = null;
+    });
+    renderCategoriesList();
+    renderRulesList();
+    renderLegend();
+    updateCategoryDropdowns();
+    renderGraph();
+}
+
+function renderCategoriesList() {
+    const list = document.getElementById('categories-list');
+    const countEl = document.getElementById('category-count');
+    if (!list) return;
+
+    list.innerHTML = '';
+    countEl.textContent = state.config.categories.length;
+
+    state.config.categories.forEach(cat => {
+        const div = document.createElement('div');
+        div.className = 'category-item';
+        div.innerHTML =
+            '<span class="category-swatch" style="background:' + escapeHtml(cat.color) + '"></span>' +
+            '<span class="category-name">' + escapeHtml(cat.name) + '</span>' +
+            '<button onclick="removeCategory(\'' + cat.id + '\')" class="btn btn-danger btn-small">&times;</button>';
+        list.appendChild(div);
+    });
+
+    updateCategoryDropdowns();
+}
+
+function updateCategoryDropdowns() {
+    const selectors = ['group-category', 'group-dialog-category'];
+    selectors.forEach(selId => {
+        const sel = document.getElementById(selId);
+        if (!sel) return;
+        const currentVal = sel.value;
+        sel.innerHTML = '<option value="">No category</option>';
+        state.config.categories.forEach(cat => {
+            const opt = document.createElement('option');
+            opt.value = cat.id;
+            opt.textContent = cat.name;
+            opt.style.color = cat.color;
+            sel.appendChild(opt);
+        });
+        sel.value = currentVal;
+    });
+}
+
+function renderLegend() {
+    const legend = document.getElementById('legend');
+    if (!legend) return;
+
+    // Only show legend if there are categories with associated grouping rules
+    const usedCategoryIds = new Set(
+        state.config.groupingRules
+            .filter(r => r.enabled && r.categoryId)
+            .map(r => r.categoryId)
+    );
+
+    const usedCategories = state.config.categories.filter(c => usedCategoryIds.has(c.id));
+
+    if (usedCategories.length === 0) {
+        legend.style.display = 'none';
+        return;
+    }
+
+    legend.style.display = 'block';
+    legend.innerHTML = '<div class="legend-title">Categories</div>';
+
+    // Add built-in node types
+    legend.innerHTML += '<div class="legend-item">' +
+        '<span class="legend-swatch" style="background:#d4e6f1"></span>' +
+        '<span>Internal package</span></div>';
+    legend.innerHTML += '<div class="legend-item">' +
+        '<span class="legend-swatch" style="background:#e8e8e8"></span>' +
+        '<span>External package</span></div>';
+
+    usedCategories.forEach(cat => {
+        legend.innerHTML += '<div class="legend-item">' +
+            '<span class="legend-swatch" style="background:' + escapeHtml(cat.color) + '"></span>' +
+            '<span>' + escapeHtml(cat.name) + '</span></div>';
     });
 }
 

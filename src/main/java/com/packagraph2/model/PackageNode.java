@@ -7,6 +7,7 @@ public class PackageNode {
 
     private String name;
     private boolean external;
+    private String categoryId;
 
     public PackageNode() {
     }
@@ -16,6 +17,12 @@ public class PackageNode {
                        @JsonProperty("external") boolean external) {
         this.name = name;
         this.external = external;
+    }
+
+    public PackageNode(String name, boolean external, String categoryId) {
+        this.name = name;
+        this.external = external;
+        this.categoryId = categoryId;
     }
 
     public String getName() {
@@ -32,6 +39,14 @@ public class PackageNode {
 
     public void setExternal(boolean external) {
         this.external = external;
+    }
+
+    public String getCategoryId() {
+        return categoryId;
+    }
+
+    public void setCategoryId(String categoryId) {
+        this.categoryId = categoryId;
     }
 
     @Override

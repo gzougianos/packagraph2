@@ -3,7 +3,9 @@ package com.packagraph2.dot;
 import com.packagraph2.model.*;
 import com.packagraph2.rules.RuleEngine;
 
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Generates Graphviz DOT format strings from a dependency graph.
@@ -27,6 +29,10 @@ public class DotGenerator {
         Set<Dependency> cyclicEdges = config.isHighlightCircularDependencies()
                 ? ruleEngine.detectCircularDependencies(graph)
                 : Set.of();
+
+        // Build category color lookup
+        Map<String, String> categoryColors = config.getCategories().stream()
+                .collect(Collectors.toMap(Category::getId, Category::getColor, (a, b) -> a));
 
         // Find common prefix for trimming
         String commonPrefix = config.isTrimCommonPrefix()
@@ -52,7 +58,18 @@ public class DotGenerator {
             dot.append("  ").append(nodeId).append(" [");
             dot.append("label=\"").append(escapeLabel(label)).append("\"");
 
-            if (node.isExternal()) {
+            // Check if node has a category color
+            String catColor = null;
+            if (node.getCategoryId() != null) {
+                catColor = categoryColors.get(node.getCategoryId());
+            }
+
+            if (catColor != null) {
+                String borderColor = darkenColor(catColor, 0.3);
+                dot.append(", fillcolor=\"").append(catColor).append("\"");
+                dot.append(", color=\"").append(borderColor).append("\"");
+                dot.append(", fontcolor=\"#2c3e50\"");
+            } else if (node.isExternal()) {
                 dot.append(", fillcolor=\"#e8e8e8\", color=\"#999999\", fontcolor=\"#666666\"");
             } else {
                 dot.append(", fillcolor=\"#d4e6f1\", color=\"#2980b9\", fontcolor=\"#2c3e50\"");
@@ -136,5 +153,23 @@ public class DotGenerator {
 
     private String escapeLabel(String label) {
         return label.replace("\\", "\\\\").replace("\"", "\\\"");
+    }
+
+    /**
+     * Darkens a hex color by the given factor (0.0 = no change, 1.0 = black).
+     */
+    private String darkenColor(String hex, double factor) {
+        try {
+            hex = hex.replace("#", "");
+            int r = Integer.parseInt(hex.substring(0, 2), 16);
+            int g = Integer.parseInt(hex.substring(2, 4), 16);
+            int b = Integer.parseInt(hex.substring(4, 6), 16);
+            r = (int) (r * (1 - factor));
+            g = (int) (g * (1 - factor));
+            b = (int) (b * (1 - factor));
+            return String.format("#%02x%02x%02x", r, g, b);
+        } catch (Exception e) {
+            return "#666666";
+        }
     }
 }

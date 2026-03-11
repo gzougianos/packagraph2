@@ -8,6 +8,7 @@ public class ProjectConfig {
     private String name;
     private String rootDirectory;
     private List<String> sourceDirectories = new ArrayList<>();
+    private List<Category> categories = new ArrayList<>();
     private List<GroupingRule> groupingRules = new ArrayList<>();
     private List<HideRule> hideRules = new ArrayList<>();
     private GraphDirection graphDirection = GraphDirection.TOP_TO_BOTTOM;
@@ -40,6 +41,14 @@ public class ProjectConfig {
 
     public void setSourceDirectories(List<String> sourceDirectories) {
         this.sourceDirectories = sourceDirectories;
+    }
+
+    public List<Category> getCategories() {
+        return categories;
+    }
+
+    public void setCategories(List<Category> categories) {
+        this.categories = categories;
     }
 
     public List<GroupingRule> getGroupingRules() {

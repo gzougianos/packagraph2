@@ -87,6 +87,8 @@
                 </div>
                 <!-- Selection rectangle -->
                 <div id="selection-rect" style="display:none"></div>
+                <!-- Legend overlay -->
+                <div id="legend" class="legend" style="display:none"></div>
             </div>
 
             <!-- Sidebar -->
@@ -123,6 +125,22 @@
                     </div>
                 </div>
 
+                <!-- Categories -->
+                <div class="sidebar-section">
+                    <h3 class="collapsible" onclick="toggleSection(this)">
+                        <span class="collapse-icon">&#9660;</span> Categories
+                        <span id="category-count" class="badge">0</span>
+                    </h3>
+                    <div class="section-content">
+                        <div id="categories-list"></div>
+                        <div class="add-rule-form">
+                            <input type="text" id="cat-name" placeholder="Name (e.g., JPA)">
+                            <input type="color" id="cat-color" value="#e67e22" class="color-input">
+                            <button onclick="addCategory()" class="btn btn-small">Add</button>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Grouping Rules -->
                 <div class="sidebar-section">
                     <h3 class="collapsible" onclick="toggleSection(this)">
@@ -130,9 +148,12 @@
                     </h3>
                     <div class="section-content">
                         <div id="grouping-rules-list"></div>
-                        <div class="add-rule-form">
+                        <div class="add-rule-form add-rule-form-wrap">
                             <input type="text" id="group-pattern" placeholder="Pattern (e.g., org.spring.**)">
                             <input type="text" id="group-name" placeholder="Display name">
+                            <select id="group-category" class="cat-select">
+                                <option value="">No category</option>
+                            </select>
                             <button onclick="addGroupingRule()" class="btn btn-small">Add</button>
                         </div>
                     </div>
@@ -209,6 +230,12 @@
             <div class="form-group">
                 <label>Pattern</label>
                 <input type="text" id="group-dialog-pattern" readonly>
+            </div>
+            <div class="form-group">
+                <label>Category</label>
+                <select id="group-dialog-category" class="cat-select">
+                    <option value="">No category</option>
+                </select>
             </div>
             <div class="dialog-actions">
                 <button onclick="cancelGroupDialog()" class="btn btn-secondary">Cancel</button>
