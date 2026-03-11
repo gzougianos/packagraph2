@@ -7,6 +7,7 @@ public class ProjectConfig {
 
     private String name;
     private String rootDirectory;
+    private List<String> allSourceDirectories = new ArrayList<>();
     private List<String> sourceDirectories = new ArrayList<>();
     private List<Category> categories = new ArrayList<>();
     private List<GroupingRule> groupingRules = new ArrayList<>();
@@ -33,6 +34,14 @@ public class ProjectConfig {
 
     public void setRootDirectory(String rootDirectory) {
         this.rootDirectory = rootDirectory;
+    }
+
+    public List<String> getAllSourceDirectories() {
+        return allSourceDirectories;
+    }
+
+    public void setAllSourceDirectories(List<String> allSourceDirectories) {
+        this.allSourceDirectories = allSourceDirectories;
     }
 
     public List<String> getSourceDirectories() {

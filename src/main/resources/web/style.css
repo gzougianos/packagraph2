@@ -736,6 +736,28 @@ body {
     border: 1px solid rgba(255,255,255,0.15);
 }
 
+/* ===== Module Selector ===== */
+.module-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    padding: 3px 0;
+    font-size: 0.75rem;
+    font-family: monospace;
+    color: #ccc;
+}
+
+.module-item input[type="checkbox"] {
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+.module-item label {
+    word-break: break-all;
+    cursor: pointer;
+    line-height: 1.3;
+}
+
 /* ===== Context Menu ===== */
 .context-menu {
     position: fixed;

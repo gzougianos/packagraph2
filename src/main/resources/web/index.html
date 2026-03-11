@@ -212,6 +212,18 @@
                         <div id="packages-list" class="package-list"></div>
                     </div>
                 </div>
+
+                <!-- Modules / Sources -->
+                <div class="sidebar-section" id="module-selector" style="display:none">
+                    <h3 class="collapsible" onclick="toggleSection(this)">
+                        <span class="collapse-icon">&#9660;</span> Modules / Sources
+                        <span id="module-count" class="badge">0</span>
+                    </h3>
+                    <div class="section-content">
+                        <div id="module-list"></div>
+                        <button onclick="applyModuleSelection()" class="btn btn-primary btn-small" style="margin-top:6px;width:100%">Apply</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

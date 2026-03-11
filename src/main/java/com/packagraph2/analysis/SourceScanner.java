@@ -17,6 +17,11 @@ public class SourceScanner {
     private static final Pattern PACKAGE_PATTERN =
             Pattern.compile("^\\s*package\\s+([a-zA-Z_][a-zA-Z0-9_.]*?)\\s*;", Pattern.MULTILINE);
 
+    private static final Set<String> SKIP_DIRS = Set.of(
+            ".git", "target", "build", "node_modules", ".idea", ".gradle",
+            ".mvn", ".settings", "bin", "out", ".vscode", ".metadata"
+    );
+
     /**
      * Scans the given root directory and returns a list of detected source roots.
      * A source root is the directory that corresponds to the root of the package hierarchy
@@ -38,13 +43,15 @@ public class SourceScanner {
 
             @Override
             public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
-                String dirName = dir.getFileName().toString();
-                // Skip common non-source directories
-                if (dirName.equals(".git") || dirName.equals("target") ||
-                    dirName.equals("build") || dirName.equals("node_modules") ||
-                    dirName.equals(".idea") || dirName.equals(".gradle")) {
+                String dirName = dir.getFileName() != null ? dir.getFileName().toString() : "";
+                if (SKIP_DIRS.contains(dirName) || dirName.startsWith(".")) {
                     return FileVisitResult.SKIP_SUBTREE;
                 }
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult visitFileFailed(Path file, IOException exc) {
                 return FileVisitResult.CONTINUE;
             }
         });

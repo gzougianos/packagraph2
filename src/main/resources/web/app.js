@@ -299,9 +299,13 @@ async function scanSources() {
         if (data.sourceDirectories.length === 0) {
             list.innerHTML = '<p style="color:#888;font-size:0.85rem">No Java source directories found.</p>';
         } else {
+            const scanPrefix = findCommonPathPrefix(data.sourceDirectories);
             data.sourceDirectories.forEach(dir => {
+                const isTest = dir.toLowerCase().includes('test');
+                const shortName = scanPrefix ? dir.substring(scanPrefix.length) : dir;
                 const label = document.createElement('label');
-                label.innerHTML = '<input type="checkbox" value="' + escapeHtml(dir) + '" checked> ' + escapeHtml(dir);
+                label.innerHTML = '<input type="checkbox" value="' + escapeHtml(dir) + '"' +
+                    (isTest ? '' : ' checked') + '> ' + escapeHtml(shortName);
                 list.appendChild(label);
             });
         }
@@ -345,9 +349,14 @@ async function createProject() {
             return;
         }
 
+        // Gather all scanned dirs (checked + unchecked)
+        const allCheckboxes = document.querySelectorAll('#source-dirs-list input[type=checkbox]');
+        const allDirs = Array.from(allCheckboxes).map(cb => cb.value);
+
         state.config = {
             name: name,
             rootDirectory: rootDir,
+            allSourceDirectories: allDirs,
             sourceDirectories: selectedDirs,
             categories: [],
             groupingRules: [],
@@ -399,6 +408,7 @@ function showMainApp() {
     renderRulesList();
     renderPackageList();
     renderLegend();
+    renderModuleSelector();
     renderGraph();
 }
 
@@ -1478,6 +1488,102 @@ async function reanalyze() {
 }
 
 // =============================================================================
+// Module Selector
+// =============================================================================
+function renderModuleSelector() {
+    const container = document.getElementById('module-selector');
+    const list = document.getElementById('module-list');
+    const countEl = document.getElementById('module-count');
+
+    // Use allSourceDirectories if available, otherwise fall back to sourceDirectories
+    const allDirs = state.config.allSourceDirectories && state.config.allSourceDirectories.length > 0
+        ? state.config.allSourceDirectories
+        : state.config.sourceDirectories || [];
+
+    if (allDirs.length <= 1) {
+        container.style.display = 'none';
+        return;
+    }
+
+    container.style.display = 'block';
+    const activeDirs = new Set(state.config.sourceDirectories || []);
+    countEl.textContent = activeDirs.size + '/' + allDirs.length;
+
+    list.innerHTML = '';
+    // Compute the longest common prefix of all directory paths
+    const prefix = findCommonPathPrefix(allDirs);
+
+    allDirs.forEach(dir => {
+        const shortName = prefix ? dir.substring(prefix.length) : dir;
+        const id = 'mod-' + hashCode(dir);
+        const checked = activeDirs.has(dir);
+
+        const div = document.createElement('div');
+        div.className = 'module-item';
+        div.innerHTML =
+            '<input type="checkbox" id="' + id + '" value="' + escapeHtml(dir) + '"' +
+            (checked ? ' checked' : '') + '>' +
+            '<label for="' + id + '">' + escapeHtml(shortName) + '</label>';
+        list.appendChild(div);
+    });
+}
+
+async function applyModuleSelection() {
+    const checkboxes = document.querySelectorAll('#module-list input[type=checkbox]');
+    const selectedDirs = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
+
+    if (selectedDirs.length === 0) {
+        toast('Select at least one module.', 'error');
+        return;
+    }
+
+    // Check if selection actually changed
+    const current = new Set(state.config.sourceDirectories);
+    const next = new Set(selectedDirs);
+    if (current.size === next.size && [...current].every(d => next.has(d))) {
+        toast('No changes to apply.', 'info');
+        return;
+    }
+
+    pushUndo();
+    state.config.sourceDirectories = selectedDirs;
+
+    showLoading('Re-analyzing with selected modules...');
+    try {
+        const resp = await fetch('/api/analyze', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sourceDirectories: selectedDirs })
+        });
+        const graph = await resp.json();
+
+        if (graph.error) {
+            toast('Error: ' + graph.error, 'error');
+            return;
+        }
+
+        state.config.graph = graph;
+        renderModuleSelector();
+        renderPackageList();
+        renderGraph();
+        toast('Modules updated.', 'success');
+    } catch (e) {
+        toast('Error: ' + e.message, 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+function hashCode(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        hash = ((hash << 5) - hash) + str.charCodeAt(i);
+        hash |= 0;
+    }
+    return Math.abs(hash).toString(36);
+}
+
+// =============================================================================
 // Sidebar Resizer
 // =============================================================================
 function initSidebarResizer() {
@@ -1587,4 +1693,43 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+/**
+ * Finds the longest common directory prefix across a list of paths.
+ * Returns the prefix including the trailing separator, or '' if none.
+ */
+function findCommonPathPrefix(paths) {
+    if (!paths || paths.length === 0) return '';
+    if (paths.length === 1) {
+        // For a single path, return everything up to and including the last separator
+        const lastSep = Math.max(paths[0].lastIndexOf('/'), paths[0].lastIndexOf('\\'));
+        return lastSep > 0 ? paths[0].substring(0, lastSep + 1) : '';
+    }
+
+    // Normalize separators to / for comparison
+    const normalized = paths.map(p => p.replace(/\\/g, '/'));
+    let prefix = normalized[0];
+    for (let i = 1; i < normalized.length; i++) {
+        while (prefix && !normalized[i].startsWith(prefix)) {
+            // Remove trailing slash before finding previous separator
+            const trimmed = prefix.endsWith('/') ? prefix.substring(0, prefix.length - 1) : prefix;
+            const lastSep = trimmed.lastIndexOf('/');
+            if (lastSep <= 0) { prefix = ''; break; }
+            prefix = trimmed.substring(0, lastSep + 1);
+        }
+    }
+    if (!prefix) return '';
+
+    // Ensure prefix ends at a directory boundary
+    if (!prefix.endsWith('/')) {
+        const lastSep = prefix.lastIndexOf('/');
+        prefix = lastSep > 0 ? prefix.substring(0, lastSep + 1) : '';
+    }
+
+    // Return using the original separator style from the first path
+    if (paths[0].includes('\\') && !paths[0].includes('/')) {
+        return prefix.replace(/\//g, '\\');
+    }
+    return prefix;
 }
