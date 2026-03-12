@@ -15,6 +15,7 @@ public class ProjectConfig {
     private GraphDirection graphDirection = GraphDirection.TOP_TO_BOTTOM;
     private boolean highlightCircularDependencies = true;
     private boolean trimCommonPrefix = false;
+    private boolean transitiveReduction = false;
     private DependencyGraph graph;
 
     public ProjectConfig() {
@@ -98,6 +99,14 @@ public class ProjectConfig {
 
     public void setTrimCommonPrefix(boolean trimCommonPrefix) {
         this.trimCommonPrefix = trimCommonPrefix;
+    }
+
+    public boolean isTransitiveReduction() {
+        return transitiveReduction;
+    }
+
+    public void setTransitiveReduction(boolean transitiveReduction) {
+        this.transitiveReduction = transitiveReduction;
     }
 
     public DependencyGraph getGraph() {

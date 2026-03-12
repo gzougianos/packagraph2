@@ -13,6 +13,7 @@ let state = {
         graphDirection: 'TOP_TO_BOTTOM',
         highlightCircularDependencies: true,
         trimCommonPrefix: false,
+        transitiveReduction: false,
         graph: null
     }
 };
@@ -366,6 +367,7 @@ async function createProject() {
             graphDirection: 'TOP_TO_BOTTOM',
             highlightCircularDependencies: true,
             trimCommonPrefix: false,
+            transitiveReduction: false,
             graph: graph
         };
         state.filePath = rootDir.replace(/\/$/, '') + '/' + name + '.pg2';
@@ -405,6 +407,7 @@ function showMainApp() {
     document.getElementById('opt-direction').value = state.config.graphDirection;
     document.getElementById('opt-circular').checked = state.config.highlightCircularDependencies;
     document.getElementById('opt-trim-prefix').checked = state.config.trimCommonPrefix;
+    document.getElementById('opt-transitive-reduction').checked = state.config.transitiveReduction || false;
 
     renderCategoriesList();
     renderRulesList();
@@ -1146,7 +1149,8 @@ function pushUndo() {
         hideRules: state.config.hideRules,
         graphDirection: state.config.graphDirection,
         highlightCircularDependencies: state.config.highlightCircularDependencies,
-        trimCommonPrefix: state.config.trimCommonPrefix
+        trimCommonPrefix: state.config.trimCommonPrefix,
+        transitiveReduction: state.config.transitiveReduction
     });
     undoStack.push(snapshot);
     redoStack = [];
@@ -1186,7 +1190,8 @@ function undo() {
         hideRules: state.config.hideRules,
         graphDirection: state.config.graphDirection,
         highlightCircularDependencies: state.config.highlightCircularDependencies,
-        trimCommonPrefix: state.config.trimCommonPrefix
+        trimCommonPrefix: state.config.trimCommonPrefix,
+        transitiveReduction: state.config.transitiveReduction
     });
     redoStack.push(current);
 
@@ -1197,6 +1202,7 @@ function undo() {
     state.config.graphDirection = snapshot.graphDirection;
     state.config.highlightCircularDependencies = snapshot.highlightCircularDependencies;
     state.config.trimCommonPrefix = snapshot.trimCommonPrefix;
+    state.config.transitiveReduction = snapshot.transitiveReduction;
 
     syncUIFromConfig();
     renderRulesList();
@@ -1212,7 +1218,8 @@ function redo() {
         hideRules: state.config.hideRules,
         graphDirection: state.config.graphDirection,
         highlightCircularDependencies: state.config.highlightCircularDependencies,
-        trimCommonPrefix: state.config.trimCommonPrefix
+        trimCommonPrefix: state.config.trimCommonPrefix,
+        transitiveReduction: state.config.transitiveReduction
     });
     undoStack.push(current);
 
@@ -1223,6 +1230,7 @@ function redo() {
     state.config.graphDirection = snapshot.graphDirection;
     state.config.highlightCircularDependencies = snapshot.highlightCircularDependencies;
     state.config.trimCommonPrefix = snapshot.trimCommonPrefix;
+    state.config.transitiveReduction = snapshot.transitiveReduction;
 
     syncUIFromConfig();
     renderRulesList();
@@ -1239,6 +1247,7 @@ function syncUIFromConfig() {
     document.getElementById('opt-direction').value = state.config.graphDirection;
     document.getElementById('opt-circular').checked = state.config.highlightCircularDependencies;
     document.getElementById('opt-trim-prefix').checked = state.config.trimCommonPrefix;
+    document.getElementById('opt-transitive-reduction').checked = state.config.transitiveReduction || false;
     renderCategoriesList();
     renderLegend();
 }
@@ -1251,6 +1260,7 @@ function onConfigChanged() {
     state.config.graphDirection = document.getElementById('opt-direction').value;
     state.config.highlightCircularDependencies = document.getElementById('opt-circular').checked;
     state.config.trimCommonPrefix = document.getElementById('opt-trim-prefix').checked;
+    state.config.transitiveReduction = document.getElementById('opt-transitive-reduction').checked;
     renderGraph();
 }
 

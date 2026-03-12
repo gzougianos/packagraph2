@@ -3,9 +3,7 @@ package com.packagraph2.dot;
 import com.packagraph2.model.*;
 import com.packagraph2.rules.RuleEngine;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -28,6 +26,11 @@ public class DotGenerator {
                 rawGraph,
                 config.getGroupingRules(),
                 config.getHideRules());
+
+        // Apply transitive reduction if enabled
+        if (config.isTransitiveReduction()) {
+            applyTransitiveReduction(graph);
+        }
 
         // Detect circular dependencies if highlighting is enabled
         Set<Dependency> cyclicEdges = config.isHighlightCircularDependencies()
@@ -157,6 +160,57 @@ public class DotGenerator {
 
     private String escapeLabel(String label) {
         return label.replace("\\", "\\\\").replace("\"", "\\\"");
+    }
+
+    /**
+     * Removes edges that are implied by transitive dependencies.
+     * An edge A→C is redundant if there exists a path A→...→C of length >= 2.
+     */
+    private void applyTransitiveReduction(DependencyGraph graph) {
+        // Build adjacency map
+        Map<String, Set<String>> adjacency = new HashMap<>();
+        for (Dependency edge : graph.getEdges()) {
+            adjacency.computeIfAbsent(edge.getFromPackage(), k -> new HashSet<>())
+                    .add(edge.getToPackage());
+        }
+
+        Set<Dependency> redundant = new HashSet<>();
+
+        for (Dependency edge : graph.getEdges()) {
+            String from = edge.getFromPackage();
+            String to = edge.getToPackage();
+
+            // Check if 'from' can reach 'to' through any other neighbor
+            Set<String> neighbors = adjacency.getOrDefault(from, Set.of());
+            for (String mid : neighbors) {
+                if (mid.equals(to)) continue;
+                if (canReach(mid, to, adjacency, new HashSet<>())) {
+                    redundant.add(edge);
+                    break;
+                }
+            }
+        }
+
+        graph.getEdges().removeAll(redundant);
+
+        // Also remove corresponding edge details
+        var details = graph.getEdgeDetails();
+        for (Dependency edge : redundant) {
+            var inner = details.get(edge.getFromPackage());
+            if (inner != null) {
+                inner.remove(edge.getToPackage());
+            }
+        }
+    }
+
+    private boolean canReach(String from, String target,
+                             Map<String, Set<String>> adjacency, Set<String> visited) {
+        if (!visited.add(from)) return false;
+        for (String neighbor : adjacency.getOrDefault(from, Set.of())) {
+            if (neighbor.equals(target)) return true;
+            if (canReach(neighbor, target, adjacency, visited)) return true;
+        }
+        return false;
     }
 
     /**
