@@ -300,6 +300,8 @@
         <div class="context-menu-item" id="ctx-add-to-selection" onclick="ctxAddToSelection()">Add to selection</div>
         <div class="context-menu-separator" id="ctx-classes-sep" style="display:none"></div>
         <div class="context-menu-item" id="ctx-show-classes" onclick="ctxShowClasses()" style="display:none">Show all classes</div>
+        <div class="context-menu-separator"></div>
+        <div class="context-menu-item" id="ctx-comment" onclick="ctxComment()">Add comment...</div>
     </div>
 
     <!-- Edge details dialog -->
@@ -345,6 +347,21 @@
             <div class="dialog-actions">
                 <button onclick="cancelGroupDialog()" class="btn btn-secondary">Cancel</button>
                 <button onclick="confirmGroupDialog()" class="btn btn-primary">Create Group</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Comment dialog -->
+    <div id="comment-dialog" class="dialog-overlay" style="display:none">
+        <div class="dialog dialog-small">
+            <h2 id="comment-dialog-title">Comment</h2>
+            <div class="form-group">
+                <textarea id="comment-text" rows="4" placeholder="Add a note about this package..." class="comment-textarea"></textarea>
+            </div>
+            <div class="dialog-actions">
+                <button onclick="removeComment()" class="btn btn-danger btn-small" id="comment-remove-btn" style="margin-right:auto;display:none">Remove</button>
+                <button onclick="document.getElementById('comment-dialog').style.display='none'" class="btn btn-secondary">Cancel</button>
+                <button onclick="saveComment()" class="btn btn-primary">Save</button>
             </div>
         </div>
     </div>

@@ -1,7 +1,9 @@
 package com.packagraph2.model;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ProjectConfig {
 
@@ -17,6 +19,7 @@ public class ProjectConfig {
     private boolean trimCommonPrefix = false;
     private boolean transitiveReduction = false;
     private boolean includeExternalDependencies = true;
+    private Map<String, String> comments = new HashMap<>();
     private String gitRepoUrl;
     private String gitBranch;
     private DependencyGraph graph;
@@ -118,6 +121,14 @@ public class ProjectConfig {
 
     public void setIncludeExternalDependencies(boolean includeExternalDependencies) {
         this.includeExternalDependencies = includeExternalDependencies;
+    }
+
+    public Map<String, String> getComments() {
+        return comments;
+    }
+
+    public void setComments(Map<String, String> comments) {
+        this.comments = comments;
     }
 
     public String getGitRepoUrl() {

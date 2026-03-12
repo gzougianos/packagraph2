@@ -83,10 +83,21 @@ public class DotGenerator {
         dot.append("  ranksep=0.8;\n");
         dot.append("\n");
 
+        // Build comments lookup
+        Map<String, String> comments = config.getComments() != null ? config.getComments() : Map.of();
+
         // Add nodes
         for (PackageNode node : graph.getNodes()) {
             String label = trimPrefix(node.getName(), commonPrefix);
             String nodeId = sanitizeId(node.getName());
+
+            boolean hasComment = comments.containsKey(node.getName())
+                    && !comments.get(node.getName()).isBlank();
+
+            // Append pencil indicator for commented nodes
+            if (hasComment) {
+                label = label + " \u270E";
+            }
 
             dot.append("  ").append(nodeId).append(" [");
             dot.append("label=\"").append(escapeLabel(label)).append("\"");
@@ -106,6 +117,11 @@ public class DotGenerator {
                 dot.append(", fillcolor=\"#3a3a3a\", color=\"#666666\", fontcolor=\"#aaaaaa\", style=\"filled,dashed\"");
             } else {
                 dot.append(", fillcolor=\"#d4e6f1\", color=\"#2980b9\", fontcolor=\"#1a3a5c\"");
+            }
+
+            // Add thicker border for commented nodes
+            if (hasComment) {
+                dot.append(", penwidth=2.5");
             }
 
             dot.append("];\n");

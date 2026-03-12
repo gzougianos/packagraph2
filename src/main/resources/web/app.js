@@ -15,6 +15,7 @@ let state = {
         trimCommonPrefix: false,
         transitiveReduction: false,
         includeExternalDependencies: true,
+        comments: {},
         graph: null
     }
 };
@@ -91,6 +92,7 @@ function hideDialogs() {
     document.getElementById('open-dialog').style.display = 'none';
     document.getElementById('clone-dialog').style.display = 'none';
     document.getElementById('group-dialog').style.display = 'none';
+    document.getElementById('comment-dialog').style.display = 'none';
 }
 
 // =============================================================================
@@ -372,6 +374,7 @@ async function createProject() {
             trimCommonPrefix: false,
             transitiveReduction: false,
             includeExternalDependencies: true,
+            comments: {},
             graph: graph
         };
         state.filePath = rootDir.replace(/\/$/, '') + '/' + name + '.pg2';
@@ -547,6 +550,7 @@ async function createClonedProject() {
             trimCommonPrefix: false,
             transitiveReduction: false,
             includeExternalDependencies: true,
+            comments: {},
             gitRepoUrl: repoUrl,
             gitBranch: branch,
             graph: graph
@@ -1042,6 +1046,11 @@ function showContextMenu(x, y, packageName) {
         && state.config.graph.packageClasses[packageName].length > 0;
     document.getElementById('ctx-classes-sep').style.display = hasClasses ? '' : 'none';
     document.getElementById('ctx-show-classes').style.display = hasClasses ? '' : 'none';
+
+    // Update comment menu item text
+    const comments = state.config.comments || {};
+    const hasComment = comments[packageName] && comments[packageName].trim();
+    document.getElementById('ctx-comment').textContent = hasComment ? 'Edit comment...' : 'Add comment...';
 }
 
 function hideContextMenu() {
@@ -1214,6 +1223,47 @@ function ctxShowClasses() {
     hideContextMenu();
 }
 
+let commentTargetNode = null;
+
+function ctxComment() {
+    if (!contextMenuNode) return;
+    commentTargetNode = contextMenuNode;
+    const comments = state.config.comments || {};
+    const existing = comments[contextMenuNode] || '';
+
+    document.getElementById('comment-dialog-title').textContent = contextMenuNode;
+    document.getElementById('comment-text').value = existing;
+    document.getElementById('comment-remove-btn').style.display = existing ? '' : 'none';
+    document.getElementById('comment-dialog').style.display = 'flex';
+    document.getElementById('comment-text').focus();
+    hideContextMenu();
+}
+
+function saveComment() {
+    if (!commentTargetNode) return;
+    const text = document.getElementById('comment-text').value.trim();
+    pushUndo();
+    if (!state.config.comments) state.config.comments = {};
+    if (text) {
+        state.config.comments[commentTargetNode] = text;
+    } else {
+        delete state.config.comments[commentTargetNode];
+    }
+    document.getElementById('comment-dialog').style.display = 'none';
+    renderGraph();
+    toast(text ? 'Comment saved.' : 'Comment removed.', 'success');
+}
+
+function removeComment() {
+    if (!commentTargetNode) return;
+    pushUndo();
+    if (!state.config.comments) state.config.comments = {};
+    delete state.config.comments[commentTargetNode];
+    document.getElementById('comment-dialog').style.display = 'none';
+    renderGraph();
+    toast('Comment removed.', 'success');
+}
+
 function showEdgeDetails(fromPkg, toPkg) {
     const details = (processedEdgeDetails[fromPkg] || {})[toPkg] || [];
     const title = document.getElementById('edge-dialog-title');
@@ -1304,11 +1354,15 @@ function showTooltip(e, packageName) {
     const node = state.config.graph.nodes.find(n => n.name === packageName);
     const type = node && node.external ? 'External' : 'Internal';
 
+    const comments = state.config.comments || {};
+    const comment = comments[packageName];
+
     tooltipEl.innerHTML =
         '<div class="tooltip-title">' + escapeHtml(packageName) + '</div>' +
         '<div class="tooltip-row">' + type + ' package</div>' +
         '<div class="tooltip-row">Dependencies: ' + deps.size + '</div>' +
-        '<div class="tooltip-row">Dependents: ' + dependents.size + '</div>';
+        '<div class="tooltip-row">Dependents: ' + dependents.size + '</div>' +
+        (comment ? '<div class="tooltip-comment">' + escapeHtml(comment) + '</div>' : '');
 
     tooltipEl.style.display = 'block';
     positionTooltip(e);
@@ -1347,7 +1401,8 @@ function pushUndo() {
         highlightCircularDependencies: state.config.highlightCircularDependencies,
         trimCommonPrefix: state.config.trimCommonPrefix,
         transitiveReduction: state.config.transitiveReduction,
-        includeExternalDependencies: state.config.includeExternalDependencies
+        includeExternalDependencies: state.config.includeExternalDependencies,
+        comments: state.config.comments || {}
     });
     undoStack.push(snapshot);
     redoStack = [];
@@ -1389,7 +1444,8 @@ function undo() {
         highlightCircularDependencies: state.config.highlightCircularDependencies,
         trimCommonPrefix: state.config.trimCommonPrefix,
         transitiveReduction: state.config.transitiveReduction,
-        includeExternalDependencies: state.config.includeExternalDependencies
+        includeExternalDependencies: state.config.includeExternalDependencies,
+        comments: state.config.comments || {}
     });
     redoStack.push(current);
 
@@ -1402,6 +1458,7 @@ function undo() {
     state.config.trimCommonPrefix = snapshot.trimCommonPrefix;
     state.config.transitiveReduction = snapshot.transitiveReduction;
     state.config.includeExternalDependencies = snapshot.includeExternalDependencies;
+    state.config.comments = snapshot.comments || {};
 
     syncUIFromConfig();
     renderRulesList();
@@ -1419,7 +1476,8 @@ function redo() {
         highlightCircularDependencies: state.config.highlightCircularDependencies,
         trimCommonPrefix: state.config.trimCommonPrefix,
         transitiveReduction: state.config.transitiveReduction,
-        includeExternalDependencies: state.config.includeExternalDependencies
+        includeExternalDependencies: state.config.includeExternalDependencies,
+        comments: state.config.comments || {}
     });
     undoStack.push(current);
 
@@ -1432,6 +1490,7 @@ function redo() {
     state.config.trimCommonPrefix = snapshot.trimCommonPrefix;
     state.config.transitiveReduction = snapshot.transitiveReduction;
     state.config.includeExternalDependencies = snapshot.includeExternalDependencies;
+    state.config.comments = snapshot.comments || {};
 
     syncUIFromConfig();
     renderRulesList();
