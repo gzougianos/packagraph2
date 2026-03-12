@@ -45,6 +45,7 @@ let dirty = false;
 // Tooltip
 let tooltipEl = null;
 let processedEdgeDetails = {};
+let lastDotString = '';
 
 // =============================================================================
 // Initialization
@@ -635,6 +636,7 @@ async function renderGraph() {
 
             // Store processed edge details for edge click dialog
             processedEdgeDetails = data.edgeDetails || {};
+            lastDotString = data.dot || '';
 
             const svg = vizInstance.renderSVGElement(data.dot);
             const container = document.getElementById('graph-container');
@@ -1817,6 +1819,165 @@ async function reanalyze() {
     } finally {
         hideLoading();
     }
+}
+
+// =============================================================================
+// Export
+// =============================================================================
+function showExportDialog() {
+    const fmt = document.getElementById('export-format');
+    const bgGroup = document.getElementById('export-bg-group');
+    // Show/hide background option based on format
+    toggleExportBgVisibility();
+    fmt.addEventListener('change', toggleExportBgVisibility);
+    document.getElementById('export-dialog').style.display = 'flex';
+}
+
+function toggleExportBgVisibility() {
+    const fmt = document.getElementById('export-format').value;
+    const bgGroup = document.getElementById('export-bg-group');
+    bgGroup.style.display = (fmt === 'png' || fmt === 'png2x' || fmt === 'svg') ? '' : 'none';
+}
+
+function exportGraph() {
+    const format = document.getElementById('export-format').value;
+    const bg = document.getElementById('export-bg').value;
+    const projectName = state.config.name || 'graph';
+
+    document.getElementById('export-dialog').style.display = 'none';
+
+    switch (format) {
+        case 'svg': exportAsSvg(projectName, bg); break;
+        case 'png': exportAsPng(projectName, bg, 1); break;
+        case 'png2x': exportAsPng(projectName, bg, 2); break;
+        case 'dot': exportAsDot(projectName); break;
+        case 'json': exportAsJson(projectName); break;
+    }
+}
+
+function exportAsSvg(name, bg) {
+    const svgEl = document.querySelector('#graph-container svg');
+    if (!svgEl) { toast('No graph to export.', 'error'); return; }
+
+    // Clone SVG so we don't modify the displayed one
+    const clone = svgEl.cloneNode(true);
+
+    // Reset any transforms from zoom/pan
+    clone.removeAttribute('style');
+    // Restore original dimensions
+    const viewBox = clone.getAttribute('viewBox');
+    if (viewBox) {
+        const parts = viewBox.split(/\s+/);
+        if (parts.length === 4) {
+            clone.setAttribute('width', parts[2] + 'pt');
+            clone.setAttribute('height', parts[3] + 'pt');
+        }
+    }
+
+    // Set background
+    if (bg === 'white') {
+        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        rect.setAttribute('width', '100%');
+        rect.setAttribute('height', '100%');
+        rect.setAttribute('fill', '#ffffff');
+        clone.insertBefore(rect, clone.firstChild);
+    } else if (bg === 'dark') {
+        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        rect.setAttribute('width', '100%');
+        rect.setAttribute('height', '100%');
+        rect.setAttribute('fill', '#1a1a2e');
+        clone.insertBefore(rect, clone.firstChild);
+    }
+
+    const data = new XMLSerializer().serializeToString(clone);
+    downloadFile(name + '.svg', 'image/svg+xml', data);
+    toast('Exported ' + name + '.svg', 'success');
+}
+
+function exportAsPng(name, bg, scale) {
+    const svgEl = document.querySelector('#graph-container svg');
+    if (!svgEl) { toast('No graph to export.', 'error'); return; }
+
+    const clone = svgEl.cloneNode(true);
+    clone.removeAttribute('style');
+
+    // Determine dimensions from viewBox
+    const viewBox = clone.getAttribute('viewBox');
+    let width, height;
+    if (viewBox) {
+        const parts = viewBox.split(/\s+/);
+        width = parseFloat(parts[2]);
+        height = parseFloat(parts[3]);
+    } else {
+        width = svgEl.getBoundingClientRect().width;
+        height = svgEl.getBoundingClientRect().height;
+    }
+
+    clone.setAttribute('width', width);
+    clone.setAttribute('height', height);
+
+    const svgData = new XMLSerializer().serializeToString(clone);
+    const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(svgBlob);
+
+    const img = new Image();
+    img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = width * scale;
+        canvas.height = height * scale;
+        const ctx = canvas.getContext('2d');
+
+        // Fill background
+        if (bg === 'white') {
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        } else if (bg === 'dark') {
+            ctx.fillStyle = '#1a1a2e';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        ctx.scale(scale, scale);
+        ctx.drawImage(img, 0, 0, width, height);
+        URL.revokeObjectURL(url);
+
+        canvas.toBlob(blob => {
+            const suffix = scale > 1 ? '@' + scale + 'x' : '';
+            const fileName = name + suffix + '.png';
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = fileName;
+            a.click();
+            URL.revokeObjectURL(a.href);
+            toast('Exported ' + fileName, 'success');
+        }, 'image/png');
+    };
+    img.onerror = () => {
+        URL.revokeObjectURL(url);
+        toast('PNG export failed.', 'error');
+    };
+    img.src = url;
+}
+
+function exportAsDot(name) {
+    if (!lastDotString) { toast('No graph to export.', 'error'); return; }
+    downloadFile(name + '.dot', 'text/vnd.graphviz', lastDotString);
+    toast('Exported ' + name + '.dot', 'success');
+}
+
+function exportAsJson(name) {
+    if (!state.config.graph) { toast('No graph to export.', 'error'); return; }
+    const json = JSON.stringify(state.config.graph, null, 2);
+    downloadFile(name + '.json', 'application/json', json);
+    toast('Exported ' + name + '.json', 'success');
+}
+
+function downloadFile(filename, mimeType, content) {
+    const blob = new Blob([content], { type: mimeType });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(a.href);
 }
 
 // =============================================================================

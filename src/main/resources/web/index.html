@@ -132,6 +132,7 @@
             </div>
             <div class="header-right">
                 <button onclick="reanalyze()" class="btn btn-small">Re-analyze</button>
+                <button onclick="showExportDialog()" class="btn btn-small">Export</button>
                 <button onclick="saveProject()" class="btn btn-primary btn-small" id="btn-save">Save</button>
             </div>
         </div>
@@ -344,6 +345,35 @@
             <div class="dialog-actions">
                 <button onclick="cancelGroupDialog()" class="btn btn-secondary">Cancel</button>
                 <button onclick="confirmGroupDialog()" class="btn btn-primary">Create Group</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export dialog -->
+    <div id="export-dialog" class="dialog-overlay" style="display:none">
+        <div class="dialog dialog-small">
+            <h2>Export Graph</h2>
+            <div class="form-group">
+                <label>Format</label>
+                <select id="export-format">
+                    <option value="svg">SVG (vector)</option>
+                    <option value="png">PNG (image)</option>
+                    <option value="png2x">PNG @2x (high-res)</option>
+                    <option value="dot">DOT (Graphviz source)</option>
+                    <option value="json">JSON (graph data)</option>
+                </select>
+            </div>
+            <div class="form-group" id="export-bg-group">
+                <label>Background</label>
+                <select id="export-bg">
+                    <option value="transparent">Transparent</option>
+                    <option value="white">White</option>
+                    <option value="dark" selected>Dark (#1a1a2e)</option>
+                </select>
+            </div>
+            <div class="dialog-actions">
+                <button onclick="document.getElementById('export-dialog').style.display='none'" class="btn btn-secondary">Cancel</button>
+                <button onclick="exportGraph()" class="btn btn-primary">Export</button>
             </div>
         </div>
     </div>
