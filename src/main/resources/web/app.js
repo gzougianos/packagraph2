@@ -1523,6 +1523,7 @@ function onConfigChanged() {
     state.config.trimCommonPrefix = document.getElementById('opt-trim-prefix').checked;
     state.config.transitiveReduction = document.getElementById('opt-transitive-reduction').checked;
     state.config.includeExternalDependencies = document.getElementById('opt-include-external').checked;
+    renderLegend();
     renderGraph();
 }
 
@@ -1730,30 +1731,44 @@ function renderLegend() {
     const legend = document.getElementById('legend');
     if (!legend) return;
 
-    // Only show legend if there are categories with associated grouping rules
+    // Determine which node types are actually present
+    const graph = state.config.graph;
+    const hasInternal = graph && graph.nodes.some(n => !n.external);
+    const hasExternal = state.config.includeExternalDependencies !== false
+        && graph && graph.nodes.some(n => n.external);
+
+    // Categories actively used by enabled grouping rules
     const usedCategoryIds = new Set(
         state.config.groupingRules
             .filter(r => r.enabled && r.categoryId)
             .map(r => r.categoryId)
     );
-
     const usedCategories = state.config.categories.filter(c => usedCategoryIds.has(c.id));
 
-    if (usedCategories.length === 0) {
+    // Count distinct visible node types
+    let typeCount = 0;
+    if (hasInternal) typeCount++;
+    if (hasExternal) typeCount++;
+    typeCount += usedCategories.length;
+
+    if (typeCount < 2) {
         legend.style.display = 'none';
         return;
     }
 
     legend.style.display = 'block';
-    legend.innerHTML = '<div class="legend-title">Categories</div>';
+    legend.innerHTML = '<div class="legend-title">Legend</div>';
 
-    // Add built-in node types
-    legend.innerHTML += '<div class="legend-item">' +
-        '<span class="legend-swatch" style="background:#d4e6f1"></span>' +
-        '<span>Internal package</span></div>';
-    legend.innerHTML += '<div class="legend-item">' +
-        '<span class="legend-swatch" style="background:#e8e8e8"></span>' +
-        '<span>External package</span></div>';
+    if (hasInternal) {
+        legend.innerHTML += '<div class="legend-item">' +
+            '<span class="legend-swatch" style="background:#d4e6f1"></span>' +
+            '<span>Internal package</span></div>';
+    }
+    if (hasExternal) {
+        legend.innerHTML += '<div class="legend-item">' +
+            '<span class="legend-swatch" style="background:#3a3a3a;border-style:dashed"></span>' +
+            '<span>External package</span></div>';
+    }
 
     usedCategories.forEach(cat => {
         legend.innerHTML += '<div class="legend-item">' +
