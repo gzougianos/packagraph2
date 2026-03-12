@@ -346,10 +346,23 @@ body {
     height: 44px;
 }
 
-.header-left, .header-center, .header-right {
+.header-left, .header-right {
     display: flex;
     align-items: center;
     gap: 8px;
+    flex: 1;
+    min-width: 0;
+}
+
+.header-right {
+    justify-content: flex-end;
+}
+
+.header-center {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
 }
 
 .app-header h1 {
