@@ -589,6 +589,16 @@ function showMainApp() {
     document.getElementById('main-app').style.flexDirection = 'column';
     document.getElementById('project-title').textContent = state.config.name || 'packagraph2';
 
+    // Show project file path in sidebar
+    const pathSection = document.getElementById('project-location-section');
+    const pathEl = document.getElementById('project-path');
+    if (state.filePath) {
+        pathEl.textContent = state.filePath;
+        pathSection.style.display = '';
+    } else {
+        pathSection.style.display = 'none';
+    }
+
     // Show git info if project was cloned from a git repo
     const gitInfoEl = document.getElementById('git-info');
     if (state.config.gitRepoUrl) {
@@ -1861,6 +1871,23 @@ async function saveProject() {
         toast('Error saving: ' + e.message, 'error');
     } finally {
         hideLoading();
+    }
+}
+
+async function openProjectDirectory() {
+    if (!state.filePath) return;
+    try {
+        const resp = await fetch('/api/open-directory', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ filePath: state.filePath })
+        });
+        const data = await resp.json();
+        if (data.error) {
+            toast('Could not open directory: ' + data.error, 'error');
+        }
+    } catch (e) {
+        toast('Could not open directory: ' + e.message, 'error');
     }
 }
 

@@ -358,6 +358,23 @@ body {
     font-weight: 600;
 }
 
+.project-location {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    padding: 10px 0;
+}
+
+.project-path-text {
+    font-size: 0.72rem;
+    color: #778;
+    font-family: monospace;
+    word-break: break-all;
+    line-height: 1.4;
+    flex: 1;
+    min-width: 0;
+}
+
 .git-info {
     font-size: 0.75rem;
     color: #888;

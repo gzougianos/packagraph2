@@ -56,6 +56,7 @@ public class WebServer {
         app.get("/api/project/recent", this::getRecentProjects);
         app.post("/api/browse", this::browseDirectory);
         app.post("/api/git/clone", this::gitClone);
+        app.post("/api/open-directory", this::openDirectory);
 
         app.start(port);
         log.info("Web server started at http://localhost:{}", port);
@@ -309,6 +310,34 @@ public class WebServer {
             name = name.substring(lastSlash + 1);
         }
         return name.replaceAll("[^a-zA-Z0-9._-]", "");
+    }
+
+    private void openDirectory(Context ctx) {
+        try {
+            JsonNode body = ProjectManager.getMapper().readTree(ctx.body());
+            String filePath = body.get("filePath").asText();
+            Path dir = Path.of(filePath).getParent();
+            if (dir == null || !Files.isDirectory(dir)) {
+                ctx.status(400).json(Map.of("error", "Directory not found: " + dir));
+                return;
+            }
+            log.info("API open-directory: {}", dir);
+
+            String os = System.getProperty("os.name", "").toLowerCase();
+            ProcessBuilder pb;
+            if (os.contains("win")) {
+                pb = new ProcessBuilder("explorer", dir.toString());
+            } else if (os.contains("mac")) {
+                pb = new ProcessBuilder("open", dir.toString());
+            } else {
+                pb = new ProcessBuilder("xdg-open", dir.toString());
+            }
+            pb.start();
+            ctx.json(Map.of("success", true));
+        } catch (Exception e) {
+            log.error("Error opening directory", e);
+            ctx.status(500).json(Map.of("error", e.getMessage()));
+        }
     }
 
     private String detectBranch(Path repoDir) {
