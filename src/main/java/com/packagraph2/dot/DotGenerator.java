@@ -77,9 +77,9 @@ public class DotGenerator {
                 dot.append(", color=\"").append(borderColor).append("\"");
                 dot.append(", fontcolor=\"#2c3e50\"");
             } else if (node.isExternal()) {
-                dot.append(", fillcolor=\"#e8e8e8\", color=\"#999999\", fontcolor=\"#666666\"");
+                dot.append(", fillcolor=\"#3a3a3a\", color=\"#666666\", fontcolor=\"#aaaaaa\", style=\"filled,dashed\"");
             } else {
-                dot.append(", fillcolor=\"#d4e6f1\", color=\"#2980b9\", fontcolor=\"#2c3e50\"");
+                dot.append(", fillcolor=\"#d4e6f1\", color=\"#2980b9\", fontcolor=\"#1a3a5c\"");
             }
 
             dot.append("];\n");
