@@ -14,6 +14,7 @@ let state = {
         highlightCircularDependencies: true,
         trimCommonPrefix: false,
         transitiveReduction: false,
+        includeExternalDependencies: true,
         graph: null
     }
 };
@@ -369,6 +370,7 @@ async function createProject() {
             highlightCircularDependencies: true,
             trimCommonPrefix: false,
             transitiveReduction: false,
+            includeExternalDependencies: true,
             graph: graph
         };
         state.filePath = rootDir.replace(/\/$/, '') + '/' + name + '.pg2';
@@ -543,6 +545,7 @@ async function createClonedProject() {
             highlightCircularDependencies: true,
             trimCommonPrefix: false,
             transitiveReduction: false,
+            includeExternalDependencies: true,
             gitRepoUrl: repoUrl,
             gitBranch: branch,
             graph: graph
@@ -598,6 +601,7 @@ function showMainApp() {
     document.getElementById('opt-circular').checked = state.config.highlightCircularDependencies;
     document.getElementById('opt-trim-prefix').checked = state.config.trimCommonPrefix;
     document.getElementById('opt-transitive-reduction').checked = state.config.transitiveReduction || false;
+    document.getElementById('opt-include-external').checked = state.config.includeExternalDependencies !== false;
 
     renderCategoriesList();
     renderRulesList();
@@ -1340,7 +1344,8 @@ function pushUndo() {
         graphDirection: state.config.graphDirection,
         highlightCircularDependencies: state.config.highlightCircularDependencies,
         trimCommonPrefix: state.config.trimCommonPrefix,
-        transitiveReduction: state.config.transitiveReduction
+        transitiveReduction: state.config.transitiveReduction,
+        includeExternalDependencies: state.config.includeExternalDependencies
     });
     undoStack.push(snapshot);
     redoStack = [];
@@ -1381,7 +1386,8 @@ function undo() {
         graphDirection: state.config.graphDirection,
         highlightCircularDependencies: state.config.highlightCircularDependencies,
         trimCommonPrefix: state.config.trimCommonPrefix,
-        transitiveReduction: state.config.transitiveReduction
+        transitiveReduction: state.config.transitiveReduction,
+        includeExternalDependencies: state.config.includeExternalDependencies
     });
     redoStack.push(current);
 
@@ -1393,6 +1399,7 @@ function undo() {
     state.config.highlightCircularDependencies = snapshot.highlightCircularDependencies;
     state.config.trimCommonPrefix = snapshot.trimCommonPrefix;
     state.config.transitiveReduction = snapshot.transitiveReduction;
+    state.config.includeExternalDependencies = snapshot.includeExternalDependencies;
 
     syncUIFromConfig();
     renderRulesList();
@@ -1409,7 +1416,8 @@ function redo() {
         graphDirection: state.config.graphDirection,
         highlightCircularDependencies: state.config.highlightCircularDependencies,
         trimCommonPrefix: state.config.trimCommonPrefix,
-        transitiveReduction: state.config.transitiveReduction
+        transitiveReduction: state.config.transitiveReduction,
+        includeExternalDependencies: state.config.includeExternalDependencies
     });
     undoStack.push(current);
 
@@ -1421,6 +1429,7 @@ function redo() {
     state.config.highlightCircularDependencies = snapshot.highlightCircularDependencies;
     state.config.trimCommonPrefix = snapshot.trimCommonPrefix;
     state.config.transitiveReduction = snapshot.transitiveReduction;
+    state.config.includeExternalDependencies = snapshot.includeExternalDependencies;
 
     syncUIFromConfig();
     renderRulesList();
@@ -1438,6 +1447,7 @@ function syncUIFromConfig() {
     document.getElementById('opt-circular').checked = state.config.highlightCircularDependencies;
     document.getElementById('opt-trim-prefix').checked = state.config.trimCommonPrefix;
     document.getElementById('opt-transitive-reduction').checked = state.config.transitiveReduction || false;
+    document.getElementById('opt-include-external').checked = state.config.includeExternalDependencies !== false;
     renderCategoriesList();
     renderLegend();
 }
@@ -1451,6 +1461,7 @@ function onConfigChanged() {
     state.config.highlightCircularDependencies = document.getElementById('opt-circular').checked;
     state.config.trimCommonPrefix = document.getElementById('opt-trim-prefix').checked;
     state.config.transitiveReduction = document.getElementById('opt-transitive-reduction').checked;
+    state.config.includeExternalDependencies = document.getElementById('opt-include-external').checked;
     renderGraph();
 }
 

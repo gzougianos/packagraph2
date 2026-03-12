@@ -35,6 +35,22 @@ public class DotGenerator {
                 config.getGroupingRules(),
                 config.getHideRules());
 
+        // Remove external dependencies if disabled
+        if (!config.isIncludeExternalDependencies()) {
+            Set<String> externalNames = new HashSet<>();
+            graph.getNodes().removeIf(node -> {
+                if (node.isExternal()) {
+                    externalNames.add(node.getName());
+                    return true;
+                }
+                return false;
+            });
+            graph.getEdges().removeIf(edge ->
+                    externalNames.contains(edge.getFromPackage()) ||
+                    externalNames.contains(edge.getToPackage()));
+            log.debug("Excluded {} external packages", externalNames.size());
+        }
+
         // Apply transitive reduction if enabled
         if (config.isTransitiveReduction()) {
             int edgesBefore = graph.getEdges().size();

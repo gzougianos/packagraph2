@@ -16,6 +16,7 @@ public class ProjectConfig {
     private boolean highlightCircularDependencies = true;
     private boolean trimCommonPrefix = false;
     private boolean transitiveReduction = false;
+    private boolean includeExternalDependencies = true;
     private String gitRepoUrl;
     private String gitBranch;
     private DependencyGraph graph;
@@ -109,6 +110,14 @@ public class ProjectConfig {
 
     public void setTransitiveReduction(boolean transitiveReduction) {
         this.transitiveReduction = transitiveReduction;
+    }
+
+    public boolean isIncludeExternalDependencies() {
+        return includeExternalDependencies;
+    }
+
+    public void setIncludeExternalDependencies(boolean includeExternalDependencies) {
+        this.includeExternalDependencies = includeExternalDependencies;
     }
 
     public String getGitRepoUrl() {
