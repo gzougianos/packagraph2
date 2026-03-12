@@ -21,6 +21,12 @@ body {
     height: 100vh;
 }
 
+.landing-logo {
+    width: 120px;
+    height: 120px;
+    margin-bottom: 0.4rem;
+}
+
 .landing-container h1 {
     font-size: 3rem;
     color: #e0e0e0;
