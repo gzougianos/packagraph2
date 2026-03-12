@@ -1,0 +1,18 @@
+<configuration>
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- packagraph2 logs at DEBUG -->
+    <logger name="com.packagraph2" level="DEBUG"/>
+
+    <!-- Quiet down Javalin/Jetty -->
+    <logger name="io.javalin" level="INFO"/>
+    <logger name="org.eclipse.jetty" level="WARN"/>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+</configuration>

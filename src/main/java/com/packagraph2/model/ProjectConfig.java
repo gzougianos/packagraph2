@@ -16,6 +16,8 @@ public class ProjectConfig {
     private boolean highlightCircularDependencies = true;
     private boolean trimCommonPrefix = false;
     private boolean transitiveReduction = false;
+    private String gitRepoUrl;
+    private String gitBranch;
     private DependencyGraph graph;
 
     public ProjectConfig() {
@@ -107,6 +109,22 @@ public class ProjectConfig {
 
     public void setTransitiveReduction(boolean transitiveReduction) {
         this.transitiveReduction = transitiveReduction;
+    }
+
+    public String getGitRepoUrl() {
+        return gitRepoUrl;
+    }
+
+    public void setGitRepoUrl(String gitRepoUrl) {
+        this.gitRepoUrl = gitRepoUrl;
+    }
+
+    public String getGitBranch() {
+        return gitBranch;
+    }
+
+    public void setGitBranch(String gitBranch) {
+        this.gitBranch = gitBranch;
     }
 
     public DependencyGraph getGraph() {

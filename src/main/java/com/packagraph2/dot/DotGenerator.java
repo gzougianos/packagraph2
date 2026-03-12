@@ -2,6 +2,8 @@ package com.packagraph2.dot;
 
 import com.packagraph2.model.*;
 import com.packagraph2.rules.RuleEngine;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -10,6 +12,8 @@ import java.util.stream.Collectors;
  * Generates Graphviz DOT format strings from a dependency graph.
  */
 public class DotGenerator {
+
+    private static final Logger log = LoggerFactory.getLogger(DotGenerator.class);
 
     private final RuleEngine ruleEngine = new RuleEngine();
 
@@ -21,6 +25,10 @@ public class DotGenerator {
      * Returns both the DOT string and the processed edge details.
      */
     public DotResult generate(DependencyGraph rawGraph, ProjectConfig config) {
+        log.debug("Generating DOT: direction={}, circular={}, trimPrefix={}, transitiveReduction={}",
+                config.getGraphDirection(), config.isHighlightCircularDependencies(),
+                config.isTrimCommonPrefix(), config.isTransitiveReduction());
+
         // Apply rules to get the filtered graph
         DependencyGraph graph = ruleEngine.applyRules(
                 rawGraph,
@@ -29,7 +37,9 @@ public class DotGenerator {
 
         // Apply transitive reduction if enabled
         if (config.isTransitiveReduction()) {
+            int edgesBefore = graph.getEdges().size();
             applyTransitiveReduction(graph);
+            log.debug("Transitive reduction removed {} edges", edgesBefore - graph.getEdges().size());
         }
 
         // Detect circular dependencies if highlighting is enabled
@@ -104,6 +114,8 @@ public class DotGenerator {
         }
 
         dot.append("}\n");
+
+        log.debug("DOT generated: {} nodes, {} edges", graph.getNodes().size(), graph.getEdges().size());
         return new DotResult(dot.toString(), graph.getEdgeDetails());
     }
 

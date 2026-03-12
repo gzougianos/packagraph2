@@ -1,5 +1,8 @@
 package com.packagraph2.analysis;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -13,6 +16,8 @@ import java.util.regex.Pattern;
  * from the file path.
  */
 public class SourceScanner {
+
+    private static final Logger log = LoggerFactory.getLogger(SourceScanner.class);
 
     private static final Pattern PACKAGE_PATTERN =
             Pattern.compile("^\\s*package\\s+([a-zA-Z_][a-zA-Z0-9_.]*?)\\s*;", Pattern.MULTILINE);
@@ -29,6 +34,7 @@ public class SourceScanner {
      */
     public List<String> detectSourceRoots(String rootDirectory) throws IOException {
         Path root = Path.of(rootDirectory).toAbsolutePath().normalize();
+        log.info("Scanning for source roots in: {}", root);
         Set<String> sourceRoots = new LinkedHashSet<>();
         List<Path> javaFiles = new ArrayList<>();
 
@@ -45,6 +51,7 @@ public class SourceScanner {
             public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
                 String dirName = dir.getFileName() != null ? dir.getFileName().toString() : "";
                 if (SKIP_DIRS.contains(dirName) || dirName.startsWith(".")) {
+                    log.debug("Skipping directory: {}", dir);
                     return FileVisitResult.SKIP_SUBTREE;
                 }
                 return FileVisitResult.CONTINUE;
@@ -52,9 +59,12 @@ public class SourceScanner {
 
             @Override
             public FileVisitResult visitFileFailed(Path file, IOException exc) {
+                log.warn("Failed to visit file: {}", file, exc);
                 return FileVisitResult.CONTINUE;
             }
         });
+
+        log.info("Found {} .java files", javaFiles.size());
 
         for (Path javaFile : javaFiles) {
             String sourceRoot = detectSourceRoot(javaFile);
@@ -63,6 +73,7 @@ public class SourceScanner {
             }
         }
 
+        log.info("Detected {} source roots: {}", sourceRoots.size(), sourceRoots);
         return new ArrayList<>(sourceRoots);
     }
 
@@ -94,7 +105,7 @@ public class SourceScanner {
                 return sourceRoot;
             }
         } catch (IOException e) {
-            // Skip files we can't read
+            log.debug("Could not read file: {}", javaFile, e);
         }
         return null;
     }

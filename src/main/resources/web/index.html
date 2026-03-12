@@ -15,6 +15,7 @@
             <p class="subtitle">Java Package Dependency Browser</p>
             <div class="landing-actions">
                 <button onclick="showCreateProject()" class="btn btn-primary btn-large">Create New Project</button>
+                <button onclick="showCloneProject()" class="btn btn-primary btn-large">Clone from Git</button>
                 <button onclick="showOpenProject()" class="btn btn-secondary btn-large">Open Project</button>
             </div>
             <div id="recent-projects" class="recent-projects" style="display:none">
@@ -48,6 +49,48 @@
         </div>
     </div>
 
+    <!-- Clone from Git Dialog -->
+    <div id="clone-dialog" class="dialog-overlay" style="display:none">
+        <div class="dialog">
+            <h2>Clone from Git</h2>
+            <div class="form-group">
+                <label>Project Name</label>
+                <input type="text" id="clone-name" placeholder="e.g., fancyapp">
+            </div>
+            <div class="form-group">
+                <label>Repository URL</label>
+                <input type="text" id="clone-url" placeholder="https://github.com/user/repo.git">
+            </div>
+            <div class="form-group">
+                <label>Branch (optional, defaults to repo default)</label>
+                <input type="text" id="clone-branch" placeholder="e.g., main, develop">
+            </div>
+            <div class="form-group">
+                <label>Clone to</label>
+                <div class="clone-target-options">
+                    <label class="radio-label">
+                        <input type="radio" name="clone-target" value="temp" checked onchange="toggleCloneTarget()">
+                        Temporary directory
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="clone-target" value="custom" onchange="toggleCloneTarget()">
+                        Custom directory
+                    </label>
+                </div>
+                <input type="text" id="clone-dir" placeholder="/path/to/clone/into" style="display:none">
+            </div>
+            <div id="clone-source-dirs-section" style="display:none">
+                <label>Source Directories (select which to include)</label>
+                <div id="clone-source-dirs-list" class="checkbox-list"></div>
+            </div>
+            <div class="dialog-actions">
+                <button onclick="hideDialogs()" class="btn btn-secondary">Cancel</button>
+                <button onclick="cloneAndScan()" class="btn btn-primary" id="clone-btn">Clone & Scan</button>
+                <button onclick="createClonedProject()" class="btn btn-primary" id="clone-create-btn" style="display:none">Create & Analyze</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Open Project Dialog -->
     <div id="open-dialog" class="dialog-overlay" style="display:none">
         <div class="dialog dialog-wide">
@@ -76,6 +119,7 @@
         <div class="app-header">
             <div class="header-left">
                 <h1 id="project-title">packagraph2</h1>
+                <span id="git-info" class="git-info" style="display:none"></span>
             </div>
             <div class="header-center">
                 <button onclick="undo()" class="btn btn-small" id="btn-undo" disabled title="Undo (Ctrl+Z)">Undo</button>

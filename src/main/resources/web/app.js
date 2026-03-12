@@ -87,6 +87,7 @@ function showOpenProject() {
 function hideDialogs() {
     document.getElementById('create-dialog').style.display = 'none';
     document.getElementById('open-dialog').style.display = 'none';
+    document.getElementById('clone-dialog').style.display = 'none';
     document.getElementById('group-dialog').style.display = 'none';
 }
 
@@ -384,6 +385,182 @@ async function createProject() {
 }
 
 // =============================================================================
+// Clone from Git
+// =============================================================================
+let clonedRootDir = null;
+
+function showCloneProject() {
+    document.getElementById('clone-dialog').style.display = 'flex';
+    document.getElementById('clone-url').focus();
+    // Reset state
+    document.getElementById('clone-name').value = '';
+    document.getElementById('clone-url').value = '';
+    document.getElementById('clone-branch').value = '';
+    document.getElementById('clone-dir').value = '';
+    document.getElementById('clone-dir').style.display = 'none';
+    document.getElementById('clone-source-dirs-section').style.display = 'none';
+    document.getElementById('clone-btn').style.display = '';
+    document.getElementById('clone-create-btn').style.display = 'none';
+    document.querySelector('input[name="clone-target"][value="temp"]').checked = true;
+    clonedRootDir = null;
+}
+
+function toggleCloneTarget() {
+    const isCustom = document.querySelector('input[name="clone-target"][value="custom"]').checked;
+    document.getElementById('clone-dir').style.display = isCustom ? '' : 'none';
+}
+
+async function cloneAndScan() {
+    const repoUrl = document.getElementById('clone-url').value.trim();
+    if (!repoUrl) {
+        toast('Repository URL is required.', 'error');
+        return;
+    }
+
+    const branch = document.getElementById('clone-branch').value.trim();
+    const isCustom = document.querySelector('input[name="clone-target"][value="custom"]').checked;
+    const targetDir = isCustom ? document.getElementById('clone-dir').value.trim() : '';
+
+    // Auto-fill project name from repo URL if empty
+    const nameInput = document.getElementById('clone-name');
+    if (!nameInput.value.trim()) {
+        let repoName = repoUrl.replace(/\.git$/, '');
+        repoName = repoName.substring(repoName.lastIndexOf('/') + 1);
+        nameInput.value = repoName;
+    }
+
+    showLoading('Cloning repository...');
+    try {
+        const cloneResp = await fetch('/api/git/clone', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                repoUrl: repoUrl,
+                branch: branch || null,
+                targetDirectory: targetDir || null
+            })
+        });
+        const cloneData = await cloneResp.json();
+        if (cloneData.error) {
+            toast('Clone failed: ' + cloneData.error, 'error');
+            return;
+        }
+
+        clonedRootDir = cloneData.directory;
+        document.getElementById('clone-branch').value = cloneData.branch;
+
+        // Now scan for source directories
+        showLoading('Scanning for source directories...');
+        const scanResp = await fetch('/api/scan-sources', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ rootDirectory: clonedRootDir })
+        });
+        const scanData = await scanResp.json();
+
+        if (scanData.error) {
+            toast('Scan failed: ' + scanData.error, 'error');
+            return;
+        }
+
+        const dirs = scanData.sourceDirectories || [];
+        if (dirs.length === 0) {
+            toast('No Java source directories found in repository.', 'error');
+            return;
+        }
+
+        // Show source directory checkboxes
+        const listEl = document.getElementById('clone-source-dirs-list');
+        listEl.innerHTML = '';
+        const commonPrefix = findCommonPathPrefix(dirs);
+        dirs.forEach(dir => {
+            const label = document.createElement('label');
+            label.className = 'checkbox-label';
+            const cb = document.createElement('input');
+            cb.type = 'checkbox';
+            cb.value = dir;
+            cb.checked = !dir.toLowerCase().includes('test');
+            label.appendChild(cb);
+            label.appendChild(document.createTextNode(' ' + dir.substring(commonPrefix.length)));
+            listEl.appendChild(label);
+        });
+
+        document.getElementById('clone-source-dirs-section').style.display = '';
+        document.getElementById('clone-btn').style.display = 'none';
+        document.getElementById('clone-create-btn').style.display = '';
+
+        toast('Repository cloned. Select source directories.', 'success');
+    } catch (e) {
+        toast('Error: ' + e.message, 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+async function createClonedProject() {
+    const name = document.getElementById('clone-name').value.trim();
+    const repoUrl = document.getElementById('clone-url').value.trim();
+    const branch = document.getElementById('clone-branch').value.trim();
+
+    if (!name || !clonedRootDir) {
+        toast('Please fill in the project name.', 'error');
+        return;
+    }
+
+    const checkboxes = document.querySelectorAll('#clone-source-dirs-list input[type=checkbox]:checked');
+    const selectedDirs = Array.from(checkboxes).map(cb => cb.value);
+    if (selectedDirs.length === 0) {
+        toast('Select at least one source directory.', 'error');
+        return;
+    }
+
+    showLoading('Analyzing source code...');
+    try {
+        const resp = await fetch('/api/analyze', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sourceDirectories: selectedDirs })
+        });
+        const graph = await resp.json();
+
+        if (graph.error) {
+            toast('Error: ' + graph.error, 'error');
+            return;
+        }
+
+        const allCheckboxes = document.querySelectorAll('#clone-source-dirs-list input[type=checkbox]');
+        const allDirs = Array.from(allCheckboxes).map(cb => cb.value);
+
+        state.config = {
+            name: name,
+            rootDirectory: clonedRootDir,
+            allSourceDirectories: allDirs,
+            sourceDirectories: selectedDirs,
+            categories: [],
+            groupingRules: [],
+            hideRules: [],
+            graphDirection: 'TOP_TO_BOTTOM',
+            highlightCircularDependencies: true,
+            trimCommonPrefix: false,
+            transitiveReduction: false,
+            gitRepoUrl: repoUrl,
+            gitBranch: branch,
+            graph: graph
+        };
+        state.filePath = clonedRootDir.replace(/\/$/, '') + '/' + name + '.pg2';
+
+        hideDialogs();
+        pushUndo();
+        markClean();
+        showMainApp();
+    } catch (e) {
+        toast('Error analyzing: ' + e.message, 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+// =============================================================================
 // Open Project
 // =============================================================================
 async function openProject() {
@@ -403,6 +580,19 @@ function showMainApp() {
     document.getElementById('main-app').style.display = 'flex';
     document.getElementById('main-app').style.flexDirection = 'column';
     document.getElementById('project-title').textContent = state.config.name || 'packagraph2';
+
+    // Show git info if project was cloned from a git repo
+    const gitInfoEl = document.getElementById('git-info');
+    if (state.config.gitRepoUrl) {
+        let repoDisplay = state.config.gitRepoUrl
+            .replace(/^https?:\/\//, '')
+            .replace(/\.git$/, '');
+        const branchDisplay = state.config.gitBranch || 'default';
+        gitInfoEl.textContent = branchDisplay + ' : ' + repoDisplay;
+        gitInfoEl.style.display = '';
+    } else {
+        gitInfoEl.style.display = 'none';
+    }
 
     document.getElementById('opt-direction').value = state.config.graphDirection;
     document.getElementById('opt-circular').checked = state.config.highlightCircularDependencies;

@@ -11,6 +11,8 @@ import com.packagraph2.model.ClassInfo;
 import com.packagraph2.model.DependencyGraph;
 import com.packagraph2.model.ImportDetail;
 import com.packagraph2.model.PackageNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.*;
@@ -22,25 +24,31 @@ import java.util.*;
  */
 public class DependencyAnalyzer {
 
+    private static final Logger log = LoggerFactory.getLogger(DependencyAnalyzer.class);
+
     private final JavaParser parser = new JavaParser();
 
     /**
      * Analyzes the given source directories and returns a dependency graph.
      */
     public DependencyGraph analyze(List<String> sourceDirectories) throws IOException {
+        log.info("Starting analysis of {} source directories", sourceDirectories.size());
         Set<String> internalPackages = new LinkedHashSet<>();
-        // Map: source package -> set of imported packages
         Map<String, Set<String>> dependencies = new LinkedHashMap<>();
-        // Map: package -> list of class info
         Map<String, List<ClassInfo>> packageClasses = new LinkedHashMap<>();
-        // Map: fromPackage -> toPackage -> list of import details
         Map<String, Map<String, List<ImportDetail>>> edgeDetails = new LinkedHashMap<>();
 
         for (String sourceDir : sourceDirectories) {
             analyzeSourceDirectory(Path.of(sourceDir), internalPackages, dependencies, packageClasses, edgeDetails);
         }
 
-        return buildGraph(internalPackages, dependencies, packageClasses, edgeDetails);
+        DependencyGraph graph = buildGraph(internalPackages, dependencies, packageClasses, edgeDetails);
+        log.info("Analysis complete: {} packages ({} internal, {} external), {} edges",
+                graph.getNodes().size(),
+                internalPackages.size(),
+                graph.getNodes().size() - internalPackages.size(),
+                graph.getEdges().size());
+        return graph;
     }
 
     private void analyzeSourceDirectory(Path sourceDir, Set<String> internalPackages,
@@ -48,13 +56,18 @@ public class DependencyAnalyzer {
                                         Map<String, List<ClassInfo>> packageClasses,
                                         Map<String, Map<String, List<ImportDetail>>> edgeDetails) throws IOException {
         if (!Files.exists(sourceDir)) {
+            log.warn("Source directory does not exist, skipping: {}", sourceDir);
             return;
         }
+
+        log.info("Analyzing source directory: {}", sourceDir);
+        int[] fileCount = {0};
 
         Files.walkFileTree(sourceDir, new SimpleFileVisitor<>() {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
                 if (file.toString().endsWith(".java")) {
+                    fileCount[0]++;
                     analyzeFile(file, internalPackages, dependencies, packageClasses, edgeDetails);
                 }
                 return FileVisitResult.CONTINUE;
@@ -64,43 +77,46 @@ public class DependencyAnalyzer {
             public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
                 String dirName = dir.getFileName().toString();
                 if (dirName.equals(".git") || dirName.equals("target") || dirName.equals("build")) {
+                    log.debug("Skipping directory: {}", dir);
                     return FileVisitResult.SKIP_SUBTREE;
                 }
                 return FileVisitResult.CONTINUE;
             }
         });
+
+        log.info("Analyzed {} .java files in {}", fileCount[0], sourceDir);
     }
 
     private void analyzeFile(Path file, Set<String> internalPackages,
                              Map<String, Set<String>> dependencies,
                              Map<String, List<ClassInfo>> packageClasses,
                              Map<String, Map<String, List<ImportDetail>>> edgeDetails) {
+        log.debug("Parsing file: {}", file);
         try {
             ParseResult<CompilationUnit> result = parser.parse(file);
             if (!result.isSuccessful() || result.getResult().isEmpty()) {
+                log.warn("Failed to parse file: {}", file);
                 return;
             }
 
             CompilationUnit cu = result.getResult().get();
 
-            // Get the package of this file
             String packageName = cu.getPackageDeclaration()
                     .map(PackageDeclaration::getNameAsString)
                     .orElse("(default)");
 
             internalPackages.add(packageName);
 
-            // Collect type declarations from this file
             List<ClassInfo> classes = packageClasses.computeIfAbsent(packageName, k -> new ArrayList<>());
             for (TypeDeclaration<?> type : cu.getTypes()) {
-                classes.add(extractClassInfo(type));
+                ClassInfo ci = extractClassInfo(type);
+                classes.add(ci);
+                log.debug("  Found {} {} {}.{}", ci.getScope(), ci.getKind(), packageName, ci.getName());
             }
 
-            // Fully qualified source class name for edge details
             String sourceClassName = file.getFileName().toString().replace(".java", "");
             String fqSourceClass = packageName.equals("(default)") ? sourceClassName : packageName + "." + sourceClassName;
 
-            // Get all imports
             Set<String> importedPackages = dependencies.computeIfAbsent(packageName, k -> new LinkedHashSet<>());
 
             for (ImportDeclaration imp : cu.getImports()) {
@@ -110,7 +126,6 @@ public class DependencyAnalyzer {
                 if (importedPackage != null && !importedPackage.equals(packageName)) {
                     importedPackages.add(importedPackage);
 
-                    // Track the specific import detail with fully qualified names
                     String fqImportedClass = imp.isAsterisk() ? importedPackage + ".*" : importName;
                     edgeDetails
                             .computeIfAbsent(packageName, k -> new LinkedHashMap<>())
@@ -119,7 +134,7 @@ public class DependencyAnalyzer {
                 }
             }
         } catch (IOException e) {
-            // Skip files we can't parse
+            log.warn("Could not read file: {}", file, e);
         }
     }
 
@@ -156,17 +171,10 @@ public class DependencyAnalyzer {
         return "package-private";
     }
 
-    /**
-     * Extracts the package name from an import statement.
-     * For "import com.example.MyClass" returns "com.example".
-     * For "import com.example.*" returns "com.example".
-     */
     private String extractPackageName(String importName, boolean isAsterisk) {
         if (isAsterisk) {
-            // import com.example.* -> package is com.example
             return importName;
         }
-        // import com.example.MyClass -> package is com.example
         int lastDot = importName.lastIndexOf('.');
         if (lastDot > 0) {
             return importName.substring(0, lastDot);
@@ -190,16 +198,13 @@ public class DependencyAnalyzer {
         graph.setPackageClasses(packageClasses);
         graph.setEdgeDetails(edgeDetails);
 
-        // Add all internal packages as nodes
         for (String pkg : internalPackages) {
             graph.addNode(new PackageNode(pkg, false));
         }
 
-        // Add edges and external package nodes
         for (var entry : dependencies.entrySet()) {
             String fromPackage = entry.getKey();
             for (String toPackage : entry.getValue()) {
-                // If the target package is not internal, add it as external
                 if (!internalPackages.contains(toPackage)) {
                     graph.addNode(new PackageNode(toPackage, true));
                 }

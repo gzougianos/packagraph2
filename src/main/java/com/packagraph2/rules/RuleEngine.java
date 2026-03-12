@@ -1,6 +1,8 @@
 package com.packagraph2.rules;
 
 import com.packagraph2.model.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.regex.Pattern;
@@ -11,12 +13,18 @@ import java.util.regex.Pattern;
  */
 public class RuleEngine {
 
+    private static final Logger log = LoggerFactory.getLogger(RuleEngine.class);
+
     /**
      * Applies all enabled rules to the given graph and returns a new transformed graph.
      */
     public DependencyGraph applyRules(DependencyGraph original,
                                        List<GroupingRule> groupingRules,
                                        List<HideRule> hideRules) {
+        log.debug("Applying rules: {} hide rules, {} grouping rules",
+                hideRules.stream().filter(HideRule::isEnabled).count(),
+                groupingRules.stream().filter(GroupingRule::isEnabled).count());
+
         DependencyGraph result = copyGraph(original);
 
         // Apply hide rules first
@@ -36,6 +44,7 @@ public class RuleEngine {
         // Remove self-referencing edges (can appear after grouping)
         result.getEdges().removeIf(e -> e.getFromPackage().equals(e.getToPackage()));
 
+        log.debug("After rules: {} nodes, {} edges", result.getNodes().size(), result.getEdges().size());
         return result;
     }
 
@@ -50,6 +59,10 @@ public class RuleEngine {
             }
             return false;
         });
+
+        if (!hiddenPackages.isEmpty()) {
+            log.debug("Hide rule '{}' matched {} packages", rule.getPattern(), hiddenPackages.size());
+        }
 
         // Remove edges connected to hidden packages
         graph.getEdges().removeIf(edge ->
@@ -81,6 +94,9 @@ public class RuleEngine {
         if (matchedPackages.isEmpty()) {
             return;
         }
+
+        log.debug("Grouping rule '{}' -> '{}' matched {} packages",
+                rule.getPattern(), rule.getDisplayName(), matchedPackages.size());
 
         // Remove matched nodes and add a group node
         boolean allExternal = graph.getNodes().stream()
@@ -209,6 +225,10 @@ public class RuleEngine {
                     }
                 }
             }
+        }
+
+        if (!cyclicEdges.isEmpty()) {
+            log.debug("Detected {} cyclic edges", cyclicEdges.size());
         }
 
         return cyclicEdges;
