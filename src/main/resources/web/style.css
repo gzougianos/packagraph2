@@ -261,6 +261,10 @@ body {
     width: 380px;
 }
 
+.dialog-edge {
+    width: min(90vw, 750px);
+}
+
 .dialog h2 {
     margin-bottom: 16px;
     color: #e0e0e0;

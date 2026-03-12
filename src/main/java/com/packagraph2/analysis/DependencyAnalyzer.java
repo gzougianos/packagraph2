@@ -96,8 +96,9 @@ public class DependencyAnalyzer {
                 classes.add(extractClassInfo(type));
             }
 
-            // The primary type name in this file (used as sourceClass for edge details)
-            String sourceClass = file.getFileName().toString().replace(".java", "");
+            // Fully qualified source class name for edge details
+            String sourceClassName = file.getFileName().toString().replace(".java", "");
+            String fqSourceClass = packageName.equals("(default)") ? sourceClassName : packageName + "." + sourceClassName;
 
             // Get all imports
             Set<String> importedPackages = dependencies.computeIfAbsent(packageName, k -> new LinkedHashSet<>());
@@ -109,12 +110,12 @@ public class DependencyAnalyzer {
                 if (importedPackage != null && !importedPackage.equals(packageName)) {
                     importedPackages.add(importedPackage);
 
-                    // Track the specific import detail
-                    String importedClass = imp.isAsterisk() ? "*" : extractClassName(importName);
+                    // Track the specific import detail with fully qualified names
+                    String fqImportedClass = imp.isAsterisk() ? importedPackage + ".*" : importName;
                     edgeDetails
                             .computeIfAbsent(packageName, k -> new LinkedHashMap<>())
                             .computeIfAbsent(importedPackage, k -> new ArrayList<>())
-                            .add(new ImportDetail(sourceClass, importedClass));
+                            .add(new ImportDetail(fqSourceClass, fqImportedClass));
                 }
             }
         } catch (IOException e) {
