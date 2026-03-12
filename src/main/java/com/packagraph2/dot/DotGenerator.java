@@ -208,7 +208,8 @@ public class DotGenerator {
 
     /**
      * Removes edges that are implied by transitive dependencies.
-     * An edge A→C is redundant if there exists a path A→...→C of length >= 2.
+     * Uses SCC-based approach: edges within cycles are never removed,
+     * only cross-component edges that are transitively implied are removed.
      */
     private void applyTransitiveReduction(DependencyGraph graph) {
         // Build adjacency map
@@ -218,20 +219,50 @@ public class DotGenerator {
                     .add(edge.getToPackage());
         }
 
-        Set<Dependency> redundant = new HashSet<>();
-
+        // Collect all nodes
+        Set<String> allNodes = new HashSet<>();
         for (Dependency edge : graph.getEdges()) {
-            String from = edge.getFromPackage();
-            String to = edge.getToPackage();
+            allNodes.add(edge.getFromPackage());
+            allNodes.add(edge.getToPackage());
+        }
 
-            // Check if 'from' can reach 'to' through any other neighbor
-            Set<String> neighbors = adjacency.getOrDefault(from, Set.of());
-            for (String mid : neighbors) {
-                if (mid.equals(to)) continue;
-                if (canReach(mid, to, adjacency, new HashSet<>())) {
-                    redundant.add(edge);
-                    break;
+        // Step 1: Find strongly connected components (Kosaraju's algorithm)
+        Map<String, Integer> nodeToScc = computeSccs(allNodes, adjacency);
+
+        // Step 2: Build condensed DAG of SCCs
+        Map<Integer, Set<Integer>> condensedAdj = new HashMap<>();
+        for (Dependency edge : graph.getEdges()) {
+            int fromScc = nodeToScc.getOrDefault(edge.getFromPackage(), -1);
+            int toScc = nodeToScc.getOrDefault(edge.getToPackage(), -1);
+            if (fromScc != toScc) {
+                condensedAdj.computeIfAbsent(fromScc, k -> new HashSet<>()).add(toScc);
+            }
+        }
+
+        // Step 3: Apply transitive reduction on the condensed DAG
+        Set<Long> redundantSccEdges = new HashSet<>();
+        for (var entry : condensedAdj.entrySet()) {
+            int fromScc = entry.getKey();
+            for (int toScc : entry.getValue()) {
+                // Check if fromScc can reach toScc through another SCC neighbor
+                for (int mid : entry.getValue()) {
+                    if (mid == toScc) continue;
+                    if (canReachScc(mid, toScc, condensedAdj, new HashSet<>())) {
+                        redundantSccEdges.add(sccEdgeKey(fromScc, toScc));
+                        break;
+                    }
                 }
+            }
+        }
+
+        // Step 4: Remove original edges that correspond to redundant condensed edges
+        Set<Dependency> redundant = new HashSet<>();
+        for (Dependency edge : graph.getEdges()) {
+            int fromScc = nodeToScc.getOrDefault(edge.getFromPackage(), -1);
+            int toScc = nodeToScc.getOrDefault(edge.getToPackage(), -1);
+            // Only remove cross-component edges; never remove intra-SCC edges
+            if (fromScc != toScc && redundantSccEdges.contains(sccEdgeKey(fromScc, toScc))) {
+                redundant.add(edge);
             }
         }
 
@@ -247,12 +278,81 @@ public class DotGenerator {
         }
     }
 
-    private boolean canReach(String from, String target,
-                             Map<String, Set<String>> adjacency, Set<String> visited) {
+    private long sccEdgeKey(int from, int to) {
+        return ((long) from << 32) | (to & 0xFFFFFFFFL);
+    }
+
+    /**
+     * Computes strongly connected components using Kosaraju's algorithm.
+     * Returns a map from node name to SCC index.
+     */
+    private Map<String, Integer> computeSccs(Set<String> allNodes, Map<String, Set<String>> adjacency) {
+        // Pass 1: compute finish order via iterative DFS
+        List<String> finishOrder = new ArrayList<>();
+        Set<String> visited = new HashSet<>();
+        for (String node : allNodes) {
+            if (!visited.contains(node)) {
+                dfsIterative(node, adjacency, visited, finishOrder);
+            }
+        }
+
+        // Build reverse adjacency
+        Map<String, Set<String>> reverseAdj = new HashMap<>();
+        for (var entry : adjacency.entrySet()) {
+            for (String to : entry.getValue()) {
+                reverseAdj.computeIfAbsent(to, k -> new HashSet<>()).add(entry.getKey());
+            }
+        }
+
+        // Pass 2: process in reverse finish order on the reversed graph
+        Map<String, Integer> nodeToScc = new HashMap<>();
+        visited.clear();
+        int sccId = 0;
+        for (int i = finishOrder.size() - 1; i >= 0; i--) {
+            String node = finishOrder.get(i);
+            if (!visited.contains(node)) {
+                List<String> component = new ArrayList<>();
+                dfsIterative(node, reverseAdj, visited, component);
+                for (String member : component) {
+                    nodeToScc.put(member, sccId);
+                }
+                sccId++;
+            }
+        }
+        return nodeToScc;
+    }
+
+    /**
+     * Iterative DFS that appends nodes to the output list in finish order.
+     */
+    private void dfsIterative(String start, Map<String, Set<String>> adj,
+                              Set<String> visited, List<String> output) {
+        Deque<String[]> stack = new ArrayDeque<>();
+        // Each frame: [node, "enter"] or [node, "exit"]
+        stack.push(new String[]{start, "enter"});
+        while (!stack.isEmpty()) {
+            String[] frame = stack.pop();
+            String node = frame[0];
+            if (frame[1].equals("exit")) {
+                output.add(node);
+                continue;
+            }
+            if (!visited.add(node)) continue;
+            stack.push(new String[]{node, "exit"});
+            for (String neighbor : adj.getOrDefault(node, Set.of())) {
+                if (!visited.contains(neighbor)) {
+                    stack.push(new String[]{neighbor, "enter"});
+                }
+            }
+        }
+    }
+
+    private boolean canReachScc(int from, int target,
+                                Map<Integer, Set<Integer>> adj, Set<Integer> visited) {
         if (!visited.add(from)) return false;
-        for (String neighbor : adjacency.getOrDefault(from, Set.of())) {
-            if (neighbor.equals(target)) return true;
-            if (canReach(neighbor, target, adjacency, visited)) return true;
+        for (int neighbor : adj.getOrDefault(from, Set.of())) {
+            if (neighbor == target) return true;
+            if (canReachScc(neighbor, target, adj, visited)) return true;
         }
         return false;
     }
