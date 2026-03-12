@@ -121,12 +121,22 @@ public class DependencyAnalyzer {
 
             for (ImportDeclaration imp : cu.getImports()) {
                 String importName = imp.getNameAsString();
-                String importedPackage = extractPackageName(importName, imp.isAsterisk());
+                String importedPackage = extractPackageName(importName, imp.isAsterisk(), imp.isStatic());
 
                 if (importedPackage != null && !importedPackage.equals(packageName)) {
                     importedPackages.add(importedPackage);
 
-                    String fqImportedClass = imp.isAsterisk() ? importedPackage + ".*" : importName;
+                    // For static imports, the class is one level above the member
+                    String fqImportedClass;
+                    if (imp.isAsterisk()) {
+                        fqImportedClass = importedPackage + ".*";
+                    } else if (imp.isStatic()) {
+                        // importName is pkg.Class.member — strip member to get pkg.Class
+                        int lastDot = importName.lastIndexOf('.');
+                        fqImportedClass = lastDot > 0 ? importName.substring(0, lastDot) : importName;
+                    } else {
+                        fqImportedClass = importName;
+                    }
                     edgeDetails
                             .computeIfAbsent(packageName, k -> new LinkedHashMap<>())
                             .computeIfAbsent(importedPackage, k -> new ArrayList<>())
@@ -171,15 +181,27 @@ public class DependencyAnalyzer {
         return "package-private";
     }
 
-    private String extractPackageName(String importName, boolean isAsterisk) {
+    private String extractPackageName(String importName, boolean isAsterisk, boolean isStatic) {
         if (isAsterisk) {
+            // For `import static pkg.Class.*`, strip the class name too
+            if (isStatic) {
+                int lastDot = importName.lastIndexOf('.');
+                return lastDot > 0 ? importName.substring(0, lastDot) : null;
+            }
             return importName;
         }
+        // Regular import: `pkg.Class` → strip Class to get pkg
+        // Static import: `pkg.Class.member` → strip member AND Class to get pkg
         int lastDot = importName.lastIndexOf('.');
-        if (lastDot > 0) {
-            return importName.substring(0, lastDot);
+        if (lastDot <= 0) return null;
+
+        String withoutLast = importName.substring(0, lastDot);
+        if (isStatic) {
+            // Strip one more segment (the class name)
+            int secondLastDot = withoutLast.lastIndexOf('.');
+            return secondLastDot > 0 ? withoutLast.substring(0, secondLastDot) : null;
         }
-        return null;
+        return withoutLast;
     }
 
     private String extractClassName(String importName) {
