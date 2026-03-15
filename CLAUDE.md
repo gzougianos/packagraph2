@@ -102,7 +102,7 @@ The order of operations when generating a graph:
 ### Graph Interactions
 - **Click node**: Toggle highlight (dims unconnected nodes/edges)
 - **Ctrl+Click node**: Add/remove from selection
-- **Right-click node**: Context menu (hide, group, highlight, select deps/dependents, show classes, comment)
+- **Right-click node**: Context menu (hide, group, highlight, select deps/dependents, show classes, comment, copy package name)
 - **Click edge**: Show edge details dialog (list of source → imported class pairs)
 - **Shift+drag**: Rectangle selection of multiple nodes
 - **Mouse wheel**: Zoom in/out toward cursor
@@ -116,6 +116,7 @@ The order of operations when generating a graph:
 - Select dependencies / Select dependents / Add to selection
 - Show all classes (internal packages only — shows class name, kind, scope)
 - Add comment... / Edit comment...
+- Copy package name (copies to clipboard)
 
 ### Keyboard Shortcuts
 - **Ctrl+Z**: Undo
