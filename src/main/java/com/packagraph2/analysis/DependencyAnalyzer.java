@@ -248,15 +248,23 @@ public class DependencyAnalyzer {
 
     /**
      * Extracts the package name from an import statement.
-     * First tries to match against known internal packages (collected via regex in phase 1).
-     * Falls back to an uppercase heuristic for external packages.
+     * First applies structural stripping (based on static/asterisk flags), then tries to match
+     * against known internal packages. Falls back to lowercase convention trimming for external packages.
+     * (Logic ported from packagraph's JavaClass.java)
      */
     private String extractPackageName(String importName, boolean isAsterisk, boolean isStatic,
                                       Set<String> internalPackages) {
-        // Try to match against known internal packages first.
-        // Walk the import name from longest prefix to shortest, checking if any prefix
-        // is a known internal package.
-        String candidate = importName;
+        // Step 1: Structural stripping based on import type.
+        // This removes class/member names from the import to get a candidate package name.
+        String packageName = adaptImport(importName, isAsterisk, isStatic);
+        if (packageName == null || packageName.isEmpty()) return null;
+
+        // Step 2: Try to match against known internal packages.
+        // Check exact match first, then walk prefixes for edge cases (e.g., inner classes).
+        if (internalPackages.contains(packageName)) {
+            return packageName;
+        }
+        String candidate = packageName;
         while (true) {
             int lastDot = candidate.lastIndexOf('.');
             if (lastDot <= 0) break;
@@ -266,41 +274,81 @@ public class DependencyAnalyzer {
             }
         }
 
-        // No internal package match — fall back to the heuristic for external packages.
-        if (isAsterisk) {
-            return stripClassSegments(importName);
-        }
-
-        int lastDot = importName.lastIndexOf('.');
-        if (lastDot <= 0) return null;
-        String remaining = importName.substring(0, lastDot);
-
-        if (isStatic) {
-            int secondLastDot = remaining.lastIndexOf('.');
-            if (secondLastDot <= 0) return null;
-            remaining = remaining.substring(0, secondLastDot);
-        }
-
-        return stripClassSegments(remaining);
+        // Step 3: No internal match — apply lowercase convention for external packages.
+        return keepOnlyLowerCase(packageName);
     }
 
     /**
-     * Strips trailing segments that start with an uppercase letter (class/inner-class names)
-     * to get the actual package name.
-     * e.g., "java.util.Map" → "java.util", "com.app.model.Order" → "com.app.model"
+     * Structurally strips class/member names from an import based on its type.
+     * Without bytecode interpretation, the parser only tells us whether the import
+     * is static and/or has an asterisk. We strip accordingly:
+     * <ul>
+     *   <li>{@code import java.io.*} → parser gives {@code java.io} → use as-is</li>
+     *   <li>{@code import java.util.HashMap} → parser gives {@code java.util.HashMap} → trim class name</li>
+     *   <li>{@code import static java.lang.System.setErr} → parser gives {@code java.lang.System.setErr} → trim method + class</li>
+     *   <li>{@code import static javax.swing.SwingUtilities.*} → parser gives {@code javax.swing.SwingUtilities} → trim class name</li>
+     * </ul>
      */
-    private String stripClassSegments(String name) {
-        while (true) {
-            int lastDot = name.lastIndexOf('.');
-            if (lastDot <= 0) return name.isEmpty() ? null : name;
-            String lastSegment = name.substring(lastDot + 1);
-            if (!lastSegment.isEmpty() && Character.isUpperCase(lastSegment.charAt(0))) {
-                name = name.substring(0, lastDot);
-            } else {
-                break;
+    private String adaptImport(String importName, boolean isAsterisk, boolean isStatic) {
+        // import java.io.*, library gives: java.io
+        if (!isStatic && isAsterisk) {
+            return importName;
+        }
+        // import java.util.HashMap, library gives: java.util.HashMap
+        // So need to trim className
+        if (!isStatic) {
+            return trimUpToLastDot(importName);
+        }
+        // import static java.lang.System.setErr, library gives: java.lang.System.setErr
+        // So need to trim method name + class name
+        if (!isAsterisk) {
+            return trimUpToLastDot(trimUpToLastDot(importName));
+        }
+        // import static javax.swing.SwingUtilities.*, library gives: javax.swing.SwingUtilities
+        // So need to trim class name
+        return trimUpToLastDot(importName);
+    }
+
+    /**
+     * If the package name still contains uppercase-starting segments (inner classes, etc.),
+     * trims from the first such segment. This handles edge cases like:
+     * {@code import static java.lang.System.SomeInnerClass.SOME_STATIC_VAR}
+     * where after structural stripping we may still have {@code java.lang.System}.
+     * We assume the standard lowercase package-name convention and trim accordingly.
+     */
+    private String keepOnlyLowerCase(String packageName) {
+        if (packageName == null || packageName.isEmpty()) return null;
+        if (followsLowercaseConvention(packageName)) return packageName;
+
+        String trimmed = trimUpToFirstUppercase(packageName);
+        if (trimmed.endsWith(".")) {
+            trimmed = trimmed.substring(0, trimmed.length() - 1);
+        }
+        return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private boolean followsLowercaseConvention(String name) {
+        for (String part : name.split("\\.")) {
+            if (!part.isEmpty() && Character.isUpperCase(part.charAt(0))) {
+                return false;
             }
         }
-        return name.isEmpty() ? null : name;
+        return true;
+    }
+
+    private String trimUpToFirstUppercase(String input) {
+        for (int i = 1; i < input.length(); i++) {
+            char c = input.charAt(i);
+            if (Character.isUpperCase(c) && input.charAt(i - 1) == '.') {
+                return input.substring(0, i);
+            }
+        }
+        return input;
+    }
+
+    private String trimUpToLastDot(String str) {
+        if (str == null || !str.contains(".")) return str;
+        return str.substring(0, str.lastIndexOf('.'));
     }
 
     private String extractClassName(String importName) {

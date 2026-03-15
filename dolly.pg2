@@ -1,0 +1,579 @@
+{
+  "name" : "dolly",
+  "rootDirectory" : "C:\\Users\\gzoug\\Java\\workspace\\aiing\\packagraph2",
+  "allSourceDirectories" : [ "C:/Users/gzoug/Java/workspace/aiing/packagraph2/dolly", "C:/Users/gzoug/Java/workspace/aiing/packagraph2/src/main/java" ],
+  "sourceDirectories" : [ "C:/Users/gzoug/Java/workspace/aiing/packagraph2/dolly" ],
+  "categories" : [ ],
+  "groupingRules" : [ {
+    "id" : "b5396e7d-56b0-4bac-bc13-4713c09769d5",
+    "pattern" : "guru**",
+    "displayName" : "GraphViz",
+    "enabled" : true,
+    "categoryId" : null
+  }, {
+    "id" : "0f038beb-c118-4c3d-b76c-b2c8caac2c0c",
+    "pattern" : "org.antlr**",
+    "displayName" : "Antlr",
+    "enabled" : true,
+    "categoryId" : null
+  } ],
+  "hideRules" : [ {
+    "id" : "b39e97e4-a2e0-468a-b9d1-d3b721d86ad5",
+    "pattern" : "java**",
+    "enabled" : true
+  }, {
+    "id" : "23c7ed85-8612-4733-b33f-e246be041cb2",
+    "pattern" : "**lombok**",
+    "enabled" : true
+  } ],
+  "graphDirection" : "TOP_TO_BOTTOM",
+  "highlightCircularDependencies" : true,
+  "trimCommonPrefix" : false,
+  "transitiveReduction" : false,
+  "includeExternalDependencies" : true,
+  "comments" : { },
+  "gitRepoUrl" : null,
+  "gitBranch" : null,
+  "graph" : {
+    "nodes" : [ {
+      "name" : "org.antlr.v4.runtime",
+      "external" : true,
+      "categoryId" : null
+    }, {
+      "name" : "com.github.gzougianos.packagraph.core",
+      "external" : false,
+      "categoryId" : null
+    }, {
+      "name" : "java.util",
+      "external" : true,
+      "categoryId" : null
+    }, {
+      "name" : "guru.nidi.graphviz.engine",
+      "external" : true,
+      "categoryId" : null
+    }, {
+      "name" : "com.github.gzougianos.packagraph.antlr4",
+      "external" : false,
+      "categoryId" : null
+    }, {
+      "name" : "guru.nidi.graphviz.attribute",
+      "external" : true,
+      "categoryId" : null
+    }, {
+      "name" : "java.util.stream",
+      "external" : true,
+      "categoryId" : null
+    }, {
+      "name" : "org.antlr.v4.runtime.dfa",
+      "external" : true,
+      "categoryId" : null
+    }, {
+      "name" : "java.nio",
+      "external" : true,
+      "categoryId" : null
+    }, {
+      "name" : "org.antlr.v4.runtime.atn",
+      "external" : true,
+      "categoryId" : null
+    }, {
+      "name" : "lombok",
+      "external" : true,
+      "categoryId" : null
+    }, {
+      "name" : "java.nio.file",
+      "external" : true,
+      "categoryId" : null
+    }, {
+      "name" : "java.nio.charset",
+      "external" : true,
+      "categoryId" : null
+    }, {
+      "name" : "com.github.gzougianos.packagraph.analysis",
+      "external" : false,
+      "categoryId" : null
+    }, {
+      "name" : "guru.nidi.graphviz.model",
+      "external" : true,
+      "categoryId" : null
+    }, {
+      "name" : "com.github.javaparser",
+      "external" : true,
+      "categoryId" : null
+    }, {
+      "name" : "lombok.experimental",
+      "external" : true,
+      "categoryId" : null
+    }, {
+      "name" : "java.util.regex",
+      "external" : true,
+      "categoryId" : null
+    }, {
+      "name" : "java.io",
+      "external" : true,
+      "categoryId" : null
+    }, {
+      "name" : "lombok.extern.slf4j",
+      "external" : true,
+      "categoryId" : null
+    }, {
+      "name" : "com.github.gzougianos.packagraph.antlr4.generated",
+      "external" : false,
+      "categoryId" : null
+    }, {
+      "name" : "com.github.gzougianos.packagraph",
+      "external" : false,
+      "categoryId" : null
+    }, {
+      "name" : "org.antlr.v4.runtime.tree",
+      "external" : true,
+      "categoryId" : null
+    }, {
+      "name" : "com.github.javaparser.ast",
+      "external" : true,
+      "categoryId" : null
+    } ],
+    "edges" : [ {
+      "fromPackage" : "com.github.gzougianos.packagraph.antlr4",
+      "toPackage" : "java.util"
+    }, {
+      "fromPackage" : "com.github.gzougianos.packagraph.antlr4.generated",
+      "toPackage" : "org.antlr.v4.runtime.atn"
+    }, {
+      "fromPackage" : "com.github.gzougianos.packagraph.core",
+      "toPackage" : "java.nio.file"
+    }, {
+      "fromPackage" : "com.github.gzougianos.packagraph.core",
+      "toPackage" : "java.util.regex"
+    }, {
+      "fromPackage" : "com.github.gzougianos.packagraph",
+      "toPackage" : "com.github.gzougianos.packagraph.antlr4"
+    }, {
+      "fromPackage" : "com.github.gzougianos.packagraph.core",
+      "toPackage" : "guru.nidi.graphviz.model"
+    }, {
+      "fromPackage" : "com.github.gzougianos.packagraph.antlr4.generated",
+      "toPackage" : "org.antlr.v4.runtime.dfa"
+    }, {
+      "fromPackage" : "com.github.gzougianos.packagraph.core",
+      "toPackage" : "java.util.stream"
+    }, {
+      "fromPackage" : "com.github.gzougianos.packagraph.analysis",
+      "toPackage" : "lombok"
+    }, {
+      "fromPackage" : "com.github.gzougianos.packagraph.analysis",
+      "toPackage" : "lombok.experimental"
+    }, {
+      "fromPackage" : "com.github.gzougianos.packagraph.analysis",
+      "toPackage" : "java.io"
+    }, {
+      "fromPackage" : "com.github.gzougianos.packagraph.antlr4.generated",
+      "toPackage" : "java.util"
+    }, {
+      "fromPackage" : "com.github.gzougianos.packagraph.analysis",
+      "toPackage" : "com.github.javaparser"
+    }, {
+      "fromPackage" : "com.github.gzougianos.packagraph.antlr4",
+      "toPackage" : "org.antlr.v4.runtime.tree"
+    }, {
+      "fromPackage" : "com.github.gzougianos.packagraph.analysis",
+      "toPackage" : "lombok.extern.slf4j"
+    }, {
+      "fromPackage" : "com.github.gzougianos.packagraph.core",
+      "toPackage" : "java.io"
+    }, {
+      "fromPackage" : "com.github.gzougianos.packagraph.core",
+      "toPackage" : "com.github.gzougianos.packagraph.analysis"
+    }, {
+      "fromPackage" : "com.github.gzougianos.packagraph.analysis",
+      "toPackage" : "java.util"
+    }, {
+      "fromPackage" : "com.github.gzougianos.packagraph.analysis",
+      "toPackage" : "java.util.stream"
+    }, {
+      "fromPackage" : "com.github.gzougianos.packagraph",
+      "toPackage" : "com.github.gzougianos.packagraph.core"
+    }, {
+      "fromPackage" : "com.github.gzougianos.packagraph.antlr4.generated",
+      "toPackage" : "org.antlr.v4.runtime.tree"
+    }, {
+      "fromPackage" : "com.github.gzougianos.packagraph.antlr4",
+      "toPackage" : "com.github.gzougianos.packagraph.antlr4.generated"
+    }, {
+      "fromPackage" : "com.github.gzougianos.packagraph.antlr4",
+      "toPackage" : "lombok.extern.slf4j"
+    }, {
+      "fromPackage" : "com.github.gzougianos.packagraph.core",
+      "toPackage" : "lombok.extern.slf4j"
+    }, {
+      "fromPackage" : "com.github.gzougianos.packagraph",
+      "toPackage" : "java.io"
+    }, {
+      "fromPackage" : "com.github.gzougianos.packagraph.antlr4",
+      "toPackage" : "com.github.gzougianos.packagraph.core"
+    }, {
+      "fromPackage" : "com.github.gzougianos.packagraph.antlr4",
+      "toPackage" : "org.antlr.v4.runtime"
+    }, {
+      "fromPackage" : "com.github.gzougianos.packagraph.antlr4.generated",
+      "toPackage" : "org.antlr.v4.runtime"
+    }, {
+      "fromPackage" : "com.github.gzougianos.packagraph.core",
+      "toPackage" : "guru.nidi.graphviz.engine"
+    }, {
+      "fromPackage" : "com.github.gzougianos.packagraph.core",
+      "toPackage" : "java.util"
+    }, {
+      "fromPackage" : "com.github.gzougianos.packagraph",
+      "toPackage" : "lombok.extern.slf4j"
+    }, {
+      "fromPackage" : "com.github.gzougianos.packagraph",
+      "toPackage" : "java.nio.file"
+    }, {
+      "fromPackage" : "com.github.gzougianos.packagraph.analysis",
+      "toPackage" : "com.github.javaparser.ast"
+    }, {
+      "fromPackage" : "com.github.gzougianos.packagraph.core",
+      "toPackage" : "lombok"
+    }, {
+      "fromPackage" : "com.github.gzougianos.packagraph.core",
+      "toPackage" : "guru.nidi.graphviz.attribute"
+    }, {
+      "fromPackage" : "com.github.gzougianos.packagraph",
+      "toPackage" : "java.nio.charset"
+    }, {
+      "fromPackage" : "com.github.gzougianos.packagraph",
+      "toPackage" : "java.nio"
+    } ],
+    "packageClasses" : {
+      "com.github.gzougianos.packagraph.analysis" : [ {
+        "name" : "ClassAnalysisFailedException",
+        "kind" : "class",
+        "scope" : "public"
+      }, {
+        "name" : "JavaClass",
+        "kind" : "class",
+        "scope" : "public"
+      }, {
+        "name" : "PackageName",
+        "kind" : "record",
+        "scope" : "public"
+      } ],
+      "com.github.gzougianos.packagraph.antlr4.generated" : [ {
+        "name" : "PgLangBaseListener",
+        "kind" : "class",
+        "scope" : "public"
+      }, {
+        "name" : "PgLangBaseVisitor",
+        "kind" : "class",
+        "scope" : "public"
+      }, {
+        "name" : "PgLangLexer",
+        "kind" : "class",
+        "scope" : "public"
+      }, {
+        "name" : "PgLangListener",
+        "kind" : "interface",
+        "scope" : "public"
+      }, {
+        "name" : "PgLangParser",
+        "kind" : "class",
+        "scope" : "public"
+      }, {
+        "name" : "PgLangVisitor",
+        "kind" : "interface",
+        "scope" : "public"
+      } ],
+      "com.github.gzougianos.packagraph.antlr4" : [ {
+        "name" : "PgLangInterpreter",
+        "kind" : "class",
+        "scope" : "public"
+      } ],
+      "com.github.gzougianos.packagraph.core" : [ {
+        "name" : "Edge",
+        "kind" : "record",
+        "scope" : "package-private"
+      }, {
+        "name" : "GraphvizRenderer",
+        "kind" : "record",
+        "scope" : "public"
+      }, {
+        "name" : "JavaFilesFinder",
+        "kind" : "class",
+        "scope" : "package-private"
+      }, {
+        "name" : "Legend",
+        "kind" : "record",
+        "scope" : "package-private"
+      }, {
+        "name" : "LegendRenderer",
+        "kind" : "record",
+        "scope" : "package-private"
+      }, {
+        "name" : "Node",
+        "kind" : "record",
+        "scope" : "package-private"
+      }, {
+        "name" : "Options",
+        "kind" : "record",
+        "scope" : "public"
+      }, {
+        "name" : "Packagraph",
+        "kind" : "record",
+        "scope" : "public"
+      } ],
+      "com.github.gzougianos.packagraph" : [ {
+        "name" : "Main",
+        "kind" : "class",
+        "scope" : "public"
+      } ]
+    },
+    "edgeDetails" : {
+      "com.github.gzougianos.packagraph.analysis" : {
+        "com.github.javaparser" : [ {
+          "sourceClass" : "com.github.gzougianos.packagraph.analysis.JavaClass",
+          "importedClass" : "com.github.javaparser.*"
+        } ],
+        "com.github.javaparser.ast" : [ {
+          "sourceClass" : "com.github.gzougianos.packagraph.analysis.JavaClass",
+          "importedClass" : "com.github.javaparser.ast.*"
+        } ],
+        "lombok" : [ {
+          "sourceClass" : "com.github.gzougianos.packagraph.analysis.JavaClass",
+          "importedClass" : "lombok.*"
+        } ],
+        "lombok.experimental" : [ {
+          "sourceClass" : "com.github.gzougianos.packagraph.analysis.JavaClass",
+          "importedClass" : "lombok.experimental.*"
+        } ],
+        "lombok.extern.slf4j" : [ {
+          "sourceClass" : "com.github.gzougianos.packagraph.analysis.JavaClass",
+          "importedClass" : "lombok.extern.slf4j.*"
+        } ],
+        "java.io" : [ {
+          "sourceClass" : "com.github.gzougianos.packagraph.analysis.JavaClass",
+          "importedClass" : "java.io.*"
+        } ],
+        "java.util" : [ {
+          "sourceClass" : "com.github.gzougianos.packagraph.analysis.JavaClass",
+          "importedClass" : "java.util.*"
+        } ],
+        "java.util.stream" : [ {
+          "sourceClass" : "com.github.gzougianos.packagraph.analysis.JavaClass",
+          "importedClass" : "java.util.stream.*"
+        } ]
+      },
+      "com.github.gzougianos.packagraph.antlr4.generated" : {
+        "org.antlr.v4.runtime" : [ {
+          "sourceClass" : "com.github.gzougianos.packagraph.antlr4.generated.PgLangBaseListener",
+          "importedClass" : "org.antlr.v4.runtime.*"
+        }, {
+          "sourceClass" : "com.github.gzougianos.packagraph.antlr4.generated.PgLangLexer",
+          "importedClass" : "org.antlr.v4.runtime.*"
+        }, {
+          "sourceClass" : "com.github.gzougianos.packagraph.antlr4.generated.PgLangParser",
+          "importedClass" : "org.antlr.v4.runtime.*"
+        } ],
+        "org.antlr.v4.runtime.tree" : [ {
+          "sourceClass" : "com.github.gzougianos.packagraph.antlr4.generated.PgLangBaseListener",
+          "importedClass" : "org.antlr.v4.runtime.tree.*"
+        }, {
+          "sourceClass" : "com.github.gzougianos.packagraph.antlr4.generated.PgLangBaseVisitor",
+          "importedClass" : "org.antlr.v4.runtime.tree.*"
+        }, {
+          "sourceClass" : "com.github.gzougianos.packagraph.antlr4.generated.PgLangListener",
+          "importedClass" : "org.antlr.v4.runtime.tree.*"
+        }, {
+          "sourceClass" : "com.github.gzougianos.packagraph.antlr4.generated.PgLangParser",
+          "importedClass" : "org.antlr.v4.runtime.tree.*"
+        }, {
+          "sourceClass" : "com.github.gzougianos.packagraph.antlr4.generated.PgLangVisitor",
+          "importedClass" : "org.antlr.v4.runtime.tree.*"
+        } ],
+        "org.antlr.v4.runtime.atn" : [ {
+          "sourceClass" : "com.github.gzougianos.packagraph.antlr4.generated.PgLangLexer",
+          "importedClass" : "org.antlr.v4.runtime.atn.*"
+        }, {
+          "sourceClass" : "com.github.gzougianos.packagraph.antlr4.generated.PgLangParser",
+          "importedClass" : "org.antlr.v4.runtime.atn.*"
+        } ],
+        "org.antlr.v4.runtime.dfa" : [ {
+          "sourceClass" : "com.github.gzougianos.packagraph.antlr4.generated.PgLangLexer",
+          "importedClass" : "org.antlr.v4.runtime.dfa.*"
+        }, {
+          "sourceClass" : "com.github.gzougianos.packagraph.antlr4.generated.PgLangParser",
+          "importedClass" : "org.antlr.v4.runtime.dfa.*"
+        } ],
+        "java.util" : [ {
+          "sourceClass" : "com.github.gzougianos.packagraph.antlr4.generated.PgLangParser",
+          "importedClass" : "java.util.*"
+        } ]
+      },
+      "com.github.gzougianos.packagraph.antlr4" : {
+        "com.github.gzougianos.packagraph.antlr4.generated" : [ {
+          "sourceClass" : "com.github.gzougianos.packagraph.antlr4.PgLangInterpreter",
+          "importedClass" : "com.github.gzougianos.packagraph.antlr4.generated.*"
+        } ],
+        "com.github.gzougianos.packagraph.core" : [ {
+          "sourceClass" : "com.github.gzougianos.packagraph.antlr4.PgLangInterpreter",
+          "importedClass" : "com.github.gzougianos.packagraph.core.*"
+        } ],
+        "lombok.extern.slf4j" : [ {
+          "sourceClass" : "com.github.gzougianos.packagraph.antlr4.PgLangInterpreter",
+          "importedClass" : "lombok.extern.slf4j.*"
+        } ],
+        "org.antlr.v4.runtime" : [ {
+          "sourceClass" : "com.github.gzougianos.packagraph.antlr4.PgLangInterpreter",
+          "importedClass" : "org.antlr.v4.runtime.*"
+        } ],
+        "org.antlr.v4.runtime.tree" : [ {
+          "sourceClass" : "com.github.gzougianos.packagraph.antlr4.PgLangInterpreter",
+          "importedClass" : "org.antlr.v4.runtime.tree.*"
+        } ],
+        "java.util" : [ {
+          "sourceClass" : "com.github.gzougianos.packagraph.antlr4.PgLangInterpreter",
+          "importedClass" : "java.util.*"
+        }, {
+          "sourceClass" : "com.github.gzougianos.packagraph.antlr4.PgLangInterpreter",
+          "importedClass" : "java.util.*"
+        } ]
+      },
+      "com.github.gzougianos.packagraph.core" : {
+        "guru.nidi.graphviz.engine" : [ {
+          "sourceClass" : "com.github.gzougianos.packagraph.core.GraphvizRenderer",
+          "importedClass" : "guru.nidi.graphviz.engine.*"
+        }, {
+          "sourceClass" : "com.github.gzougianos.packagraph.core.LegendRenderer",
+          "importedClass" : "guru.nidi.graphviz.engine.*"
+        } ],
+        "guru.nidi.graphviz.model" : [ {
+          "sourceClass" : "com.github.gzougianos.packagraph.core.GraphvizRenderer",
+          "importedClass" : "guru.nidi.graphviz.model.*"
+        }, {
+          "sourceClass" : "com.github.gzougianos.packagraph.core.LegendRenderer",
+          "importedClass" : "guru.nidi.graphviz.model.*"
+        }, {
+          "sourceClass" : "com.github.gzougianos.packagraph.core.LegendRenderer",
+          "importedClass" : "guru.nidi.graphviz.model.Node"
+        }, {
+          "sourceClass" : "com.github.gzougianos.packagraph.core.LegendRenderer",
+          "importedClass" : "guru.nidi.graphviz.model.*"
+        } ],
+        "lombok.extern.slf4j" : [ {
+          "sourceClass" : "com.github.gzougianos.packagraph.core.GraphvizRenderer",
+          "importedClass" : "lombok.extern.slf4j.*"
+        }, {
+          "sourceClass" : "com.github.gzougianos.packagraph.core.Options",
+          "importedClass" : "lombok.extern.slf4j.*"
+        }, {
+          "sourceClass" : "com.github.gzougianos.packagraph.core.Packagraph",
+          "importedClass" : "lombok.extern.slf4j.*"
+        } ],
+        "java.io" : [ {
+          "sourceClass" : "com.github.gzougianos.packagraph.core.GraphvizRenderer",
+          "importedClass" : "java.io.*"
+        }, {
+          "sourceClass" : "com.github.gzougianos.packagraph.core.JavaFilesFinder",
+          "importedClass" : "java.io.*"
+        }, {
+          "sourceClass" : "com.github.gzougianos.packagraph.core.LegendRenderer",
+          "importedClass" : "java.io.*"
+        }, {
+          "sourceClass" : "com.github.gzougianos.packagraph.core.Options",
+          "importedClass" : "java.io.*"
+        }, {
+          "sourceClass" : "com.github.gzougianos.packagraph.core.Packagraph",
+          "importedClass" : "java.io.*"
+        } ],
+        "java.util" : [ {
+          "sourceClass" : "com.github.gzougianos.packagraph.core.GraphvizRenderer",
+          "importedClass" : "java.util.*"
+        }, {
+          "sourceClass" : "com.github.gzougianos.packagraph.core.JavaFilesFinder",
+          "importedClass" : "java.util.*"
+        }, {
+          "sourceClass" : "com.github.gzougianos.packagraph.core.Legend",
+          "importedClass" : "java.util.*"
+        }, {
+          "sourceClass" : "com.github.gzougianos.packagraph.core.LegendRenderer",
+          "importedClass" : "java.util.*"
+        }, {
+          "sourceClass" : "com.github.gzougianos.packagraph.core.Options",
+          "importedClass" : "java.util.*"
+        }, {
+          "sourceClass" : "com.github.gzougianos.packagraph.core.Options",
+          "importedClass" : "java.util.*"
+        }, {
+          "sourceClass" : "com.github.gzougianos.packagraph.core.Packagraph",
+          "importedClass" : "java.util.*"
+        } ],
+        "java.util.regex" : [ {
+          "sourceClass" : "com.github.gzougianos.packagraph.core.GraphvizRenderer",
+          "importedClass" : "java.util.regex.*"
+        }, {
+          "sourceClass" : "com.github.gzougianos.packagraph.core.Options",
+          "importedClass" : "java.util.regex.*"
+        } ],
+        "java.util.stream" : [ {
+          "sourceClass" : "com.github.gzougianos.packagraph.core.GraphvizRenderer",
+          "importedClass" : "java.util.stream.*"
+        }, {
+          "sourceClass" : "com.github.gzougianos.packagraph.core.JavaFilesFinder",
+          "importedClass" : "java.util.stream.*"
+        }, {
+          "sourceClass" : "com.github.gzougianos.packagraph.core.Packagraph",
+          "importedClass" : "java.util.stream.*"
+        } ],
+        "guru.nidi.graphviz.attribute" : [ {
+          "sourceClass" : "com.github.gzougianos.packagraph.core.LegendRenderer",
+          "importedClass" : "guru.nidi.graphviz.attribute.*"
+        } ],
+        "java.nio.file" : [ {
+          "sourceClass" : "com.github.gzougianos.packagraph.core.LegendRenderer",
+          "importedClass" : "java.nio.file.*"
+        } ],
+        "com.github.gzougianos.packagraph.analysis" : [ {
+          "sourceClass" : "com.github.gzougianos.packagraph.core.Node",
+          "importedClass" : "com.github.gzougianos.packagraph.analysis.*"
+        }, {
+          "sourceClass" : "com.github.gzougianos.packagraph.core.Packagraph",
+          "importedClass" : "com.github.gzougianos.packagraph.analysis.*"
+        } ],
+        "lombok" : [ {
+          "sourceClass" : "com.github.gzougianos.packagraph.core.Options",
+          "importedClass" : "lombok.*"
+        } ]
+      },
+      "com.github.gzougianos.packagraph" : {
+        "com.github.gzougianos.packagraph.antlr4" : [ {
+          "sourceClass" : "com.github.gzougianos.packagraph.Main",
+          "importedClass" : "com.github.gzougianos.packagraph.antlr4.*"
+        } ],
+        "com.github.gzougianos.packagraph.core" : [ {
+          "sourceClass" : "com.github.gzougianos.packagraph.Main",
+          "importedClass" : "com.github.gzougianos.packagraph.core.*"
+        } ],
+        "lombok.extern.slf4j" : [ {
+          "sourceClass" : "com.github.gzougianos.packagraph.Main",
+          "importedClass" : "lombok.extern.slf4j.*"
+        } ],
+        "java.io" : [ {
+          "sourceClass" : "com.github.gzougianos.packagraph.Main",
+          "importedClass" : "java.io.*"
+        } ],
+        "java.nio" : [ {
+          "sourceClass" : "com.github.gzougianos.packagraph.Main",
+          "importedClass" : "java.nio.*"
+        } ],
+        "java.nio.charset" : [ {
+          "sourceClass" : "com.github.gzougianos.packagraph.Main",
+          "importedClass" : "java.nio.charset.*"
+        } ],
+        "java.nio.file" : [ {
+          "sourceClass" : "com.github.gzougianos.packagraph.Main",
+          "importedClass" : "java.nio.file.*"
+        } ]
+      }
+    },
+    "internalPackageNames" : [ "com.github.gzougianos.packagraph.core", "com.github.gzougianos.packagraph.antlr4", "com.github.gzougianos.packagraph.analysis", "com.github.gzougianos.packagraph.antlr4.generated", "com.github.gzougianos.packagraph" ]
+  }
+}

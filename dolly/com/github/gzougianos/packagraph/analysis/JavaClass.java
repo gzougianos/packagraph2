@@ -1,0 +1,143 @@
+package com.github.gzougianos.packagraph.analysis;
+
+import com.github.javaparser.*;
+import com.github.javaparser.ast.*;
+import lombok.*;
+import lombok.experimental.*;
+import lombok.extern.slf4j.*;
+
+import java.io.*;
+import java.util.*;
+import java.util.stream.*;
+
+@Accessors(fluent = true)
+@ToString
+@Getter
+@Slf4j
+public final class JavaClass {
+    public static final JavaParser JAVA_PARSER;
+
+    static {
+        final ParserConfiguration parserConfiguration = new ParserConfiguration();
+        parserConfiguration.setLanguageLevel(ParserConfiguration.LanguageLevel.JAVA_21);
+
+        JAVA_PARSER = new JavaParser(parserConfiguration);
+    }
+
+    private final File sourceFile;
+    private final Collection<PackageName> imports;
+    private final PackageName packag;
+
+    private JavaClass(File sourceFile) throws IOException {
+        this.sourceFile = sourceFile;
+
+        final var compilationUnit = parse(sourceFile);
+        this.imports = findImports(compilationUnit);
+        this.packag = findPackage(compilationUnit);
+    }
+
+    private PackageName findPackage(CompilationUnit compilationUnit) {
+        return compilationUnit.getPackageDeclaration()
+                .map(PackageDeclaration::getNameAsString)
+                .map(PackageName::new)
+                .orElse(PackageName.ROOT);
+    }
+
+    private static CompilationUnit parse(File sourceFile) throws FileNotFoundException {
+        var parseResult = JAVA_PARSER.parse(sourceFile);
+        if (!parseResult.getProblems().isEmpty()) {
+            for (var problem : parseResult.getProblems()) {
+                log.warn("{}: {}", sourceFile.getName(), problem.getMessage());
+            }
+            throw new ClassAnalysisFailedException("Failed to parse file: " + sourceFile.getAbsolutePath() + ".");
+        }
+
+        return parseResult
+                .getResult()
+                .orElseThrow(() -> new ClassAnalysisFailedException("Failed to parse file: " + sourceFile.getAbsolutePath()));
+    }
+
+    private Collection<PackageName> findImports(CompilationUnit unit) {
+        return unit.getImports().stream()
+                .map(JavaClass::adaptImport)
+                .map(JavaClass::keepOnlyLowerCase)
+                .collect(Collectors.toSet());
+    }
+
+    /*
+     * This needs to be fixed! Imagine the following import:
+     * import static java.lang.System.SomeInnerClass.SOME_STATIC_VAR;
+     *
+     * Without bytecode interpretation, the parser gives:
+     * java.lang.System.SomeInnerClass.SOME_STATIC_VAR
+     *
+     * and the only information we have is of course is whether the import is static or not, or has an asterisk.
+     *
+     * For now...we just assume that the whole world follows the lowercase package-name convention
+     * and manually trim the package-name as a string
+     */
+    //TODO: fix....
+    private static PackageName keepOnlyLowerCase(PackageName packageName) {
+        if (packageName.followsLowercaseConvention())
+            return packageName;
+
+        String name = packageName.name();
+        var newName = trimUpToFirstUppercase(name);
+        if (newName.endsWith(".")) {
+            newName = newName.substring(0, newName.length() - 1);
+        }
+
+        return new PackageName(newName);
+    }
+
+    private static String trimUpToFirstUppercase(String input) {
+
+        for (int i = 1; i < input.length(); i++) {
+            char c = input.charAt(i);
+            if (Character.isUpperCase(c) && input.charAt(i - 1) == '.') {
+                return input.substring(0, i);
+            }
+        }
+        return input;
+    }
+
+    private static PackageName adaptImport(ImportDeclaration importt) {
+        final var importName = importt.getNameAsString();
+
+        //import java.io.*, library gives: java.io
+        if (!importt.isStatic() && importt.isAsterisk()) {
+            return new PackageName(importName);
+        }
+
+        //import java.util.HashMap, library gives: java.util.HashMap
+        //So need to trim className
+        if (!importt.isStatic() && !importt.isAsterisk()) {
+            return new PackageName(trimUpToLastDot(importName));
+        }
+
+        //import static java.lang.System.setErr, library gives: java.lang.System.setErr
+        //So need to trim method name + class name
+        if (importt.isStatic() && !importt.isAsterisk()) {
+            return new PackageName(trimUpToLastDot(trimUpToLastDot(importName)));
+        }
+
+        //import static javax.swing.SwingUtilities.*, library gives: javax.swing.SwingUtilities
+        //So need to trim class name
+        return new PackageName(trimUpToLastDot(importName));
+    }
+
+    private static String trimUpToLastDot(String str) {
+        if (!str.contains("."))
+            return str;
+
+        return str.substring(0, str.lastIndexOf('.'));
+    }
+
+    public static JavaClass of(File sourceFile) throws ClassAnalysisFailedException {
+        try {
+            return new JavaClass(sourceFile);
+        } catch (IOException e) {
+            throw new ClassAnalysisFailedException("Failed to analyze class: " + sourceFile.getAbsolutePath(), e);
+        }
+    }
+}
