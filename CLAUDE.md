@@ -2,7 +2,7 @@
 
 ## Overview
 
-packagraph2 is a Java package dependency browser/visualizer for Java codebases. It parses Java source code and renders interactive package dependency graphs. It can be used both as an interactive web UI and as a CLI tool for CI pipelines.
+packagraph2 is a Java package dependency browser/visualizer for Java codebases. It parses Java source code and renders interactive package dependency graphs via an interactive web UI.
 
 ## Architecture
 
@@ -13,20 +13,12 @@ packagraph2 is a Java package dependency browser/visualizer for Java codebases. 
 - **Project file manager**: Reads/writes `.pg2` project files
 - **Graphviz DOT generator**: Converts the graph model to Graphviz DOT format; returns both DOT string and processed edge details via `DotResult` record
 
-### Two Modes
-
-**UI mode** (`packagraph2 serve --project fancyapp.pg2`):
+### Web UI (`packagraph2 serve --project fancyapp.pg2`)
 - Local web server using **Javalin** (lightweight embedded server)
 - Frontend: plain vanilla JS + **viz.js** (Graphviz compiled to WebAssembly)
 - Renders an SVG graph with a side panel for rules/configuration
 - Graph re-renders in the browser when rules change (via viz.js WASM)
 - Explicit save button to persist changes to the project file
-
-**CLI mode** (`packagraph2 export --project fancyapp.pg2 --format svg -o graph.svg`):
-- Reads the project file, applies rules, generates DOT, renders via Graphviz
-- Outputs PNG or SVG
-- Designed for CI pipeline usage
-- Produces identical output to the web UI (same Graphviz engine)
 
 ### UI Layout
 ```
@@ -216,8 +208,7 @@ The order of operations when generating a graph:
 - **Web server (UI mode)**: Javalin
 - **Logging**: SLF4J + Logback (`com.packagraph2` at DEBUG, Javalin at INFO, Jetty at WARN)
 - **Frontend**: Plain vanilla JS + viz.js (Graphviz WASM)
-- **Graph rendering**: Graphviz (DOT format) — same engine for both UI and CLI
-- **CLI image export**: Graphviz (installed on system for CLI mode)
+- **Graph rendering**: Graphviz (DOT format) via viz.js (WASM)
 
 ## Multi-Module Support
 
@@ -234,7 +225,7 @@ The order of operations when generating a graph:
 - `POST /api/dot` — Generate DOT + edge details from a ProjectConfig
 - `POST /api/project/save` — Save project config to a `.pg2` file
 - `POST /api/project/open` — Load a `.pg2` file
-- `GET /api/project/initial` — Load the project specified via CLI `--project` flag
+- `GET /api/project/initial` — Load the project specified via `--project` flag
 - `GET /api/project/recent` — List recently opened projects
 - `POST /api/browse` — Browse directories (for file open dialog)
 - `POST /api/git/clone` — Clone a git repository (shallow, optional branch)
