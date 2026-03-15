@@ -1,0 +1,818 @@
+{
+  "name" : "packagraph2",
+  "rootDirectory" : "C:\\Users\\gzoug\\Java\\workspace\\aiing\\packagraph2",
+  "allSourceDirectories" : [ "C:/Users/gzoug/Java/workspace/aiing/packagraph2/dolly", "C:/Users/gzoug/Java/workspace/aiing/packagraph2/src/main/java" ],
+  "sourceDirectories" : [ "C:/Users/gzoug/Java/workspace/aiing/packagraph2/src/main/java" ],
+  "categories" : [ {
+    "id" : "d193330d-1932-4521-a735-aadac304e195",
+    "name" : "Infrastructure",
+    "color" : "#66e91f"
+  }, {
+    "id" : "bb59f15e-694c-4d10-b876-1e0f692f0e6c",
+    "name" : "Library",
+    "color" : "#808080"
+  } ],
+  "groupingRules" : [ {
+    "id" : "d98a533e-d8e9-4d86-910a-102b11e18827",
+    "pattern" : "io.javalin**",
+    "displayName" : "Javalin",
+    "enabled" : true,
+    "categoryId" : "d193330d-1932-4521-a735-aadac304e195"
+  }, {
+    "id" : "2e875a14-ff8a-447e-9875-ee2cfe658738",
+    "pattern" : "com.fasterxml.jackson**",
+    "displayName" : "Jackson",
+    "enabled" : true,
+    "categoryId" : "bb59f15e-694c-4d10-b876-1e0f692f0e6c"
+  }, {
+    "id" : "4b9f0dc3-d5aa-4995-bbdb-d544004894d7",
+    "pattern" : "**picocli**",
+    "displayName" : "picocli",
+    "enabled" : true,
+    "categoryId" : "bb59f15e-694c-4d10-b876-1e0f692f0e6c"
+  }, {
+    "id" : "b8b2b206-a4e3-4d18-8a0c-f95a9350128c",
+    "pattern" : "com.github.javaparser**",
+    "displayName" : "JavaParser",
+    "enabled" : true,
+    "categoryId" : "bb59f15e-694c-4d10-b876-1e0f692f0e6c"
+  } ],
+  "hideRules" : [ {
+    "id" : "a0184039-f03c-4bf5-8a1b-b8052588344b",
+    "pattern" : "java**",
+    "enabled" : true
+  }, {
+    "id" : "1f5e03be-822f-4631-b93b-e84e975aca47",
+    "pattern" : "org.jetbrains.annotations",
+    "enabled" : true
+  }, {
+    "id" : "67ec37e6-a069-48bf-9388-0575d34ddc6e",
+    "pattern" : "org.slf4j**",
+    "enabled" : true
+  } ],
+  "graphDirection" : "TOP_TO_BOTTOM",
+  "highlightCircularDependencies" : true,
+  "trimCommonPrefix" : true,
+  "transitiveReduction" : false,
+  "includeExternalDependencies" : true,
+  "comments" : { },
+  "gitRepoUrl" : null,
+  "gitBranch" : null,
+  "graph" : {
+    "nodes" : [ {
+      "name" : "io.javalin.json",
+      "external" : true,
+      "categoryId" : null
+    }, {
+      "name" : "com.packagraph2.model",
+      "external" : false,
+      "categoryId" : null
+    }, {
+      "name" : "java.util",
+      "external" : true,
+      "categoryId" : null
+    }, {
+      "name" : "org.slf4j",
+      "external" : true,
+      "categoryId" : null
+    }, {
+      "name" : "com.fasterxml.jackson.annotation",
+      "external" : true,
+      "categoryId" : null
+    }, {
+      "name" : "java.util.stream",
+      "external" : true,
+      "categoryId" : null
+    }, {
+      "name" : "org.jetbrains.annotations",
+      "external" : true,
+      "categoryId" : null
+    }, {
+      "name" : "com.packagraph2.rules",
+      "external" : false,
+      "categoryId" : null
+    }, {
+      "name" : "java.nio.file",
+      "external" : true,
+      "categoryId" : null
+    }, {
+      "name" : "com.packagraph2.dot",
+      "external" : false,
+      "categoryId" : null
+    }, {
+      "name" : "com.github.javaparser.ast.body",
+      "external" : true,
+      "categoryId" : null
+    }, {
+      "name" : "java.util.regex",
+      "external" : true,
+      "categoryId" : null
+    }, {
+      "name" : "java.net",
+      "external" : true,
+      "categoryId" : null
+    }, {
+      "name" : "picocli",
+      "external" : true,
+      "categoryId" : null
+    }, {
+      "name" : "com.github.javaparser.ast",
+      "external" : true,
+      "categoryId" : null
+    }, {
+      "name" : "com.fasterxml.jackson.databind",
+      "external" : true,
+      "categoryId" : null
+    }, {
+      "name" : "com.packagraph2.server",
+      "external" : false,
+      "categoryId" : null
+    }, {
+      "name" : "java.lang.reflect",
+      "external" : true,
+      "categoryId" : null
+    }, {
+      "name" : "io.javalin.http",
+      "external" : true,
+      "categoryId" : null
+    }, {
+      "name" : "com.packagraph2.project",
+      "external" : false,
+      "categoryId" : null
+    }, {
+      "name" : "io.javalin.http.staticfiles",
+      "external" : true,
+      "categoryId" : null
+    }, {
+      "name" : "com.fasterxml.jackson.core.type",
+      "external" : true,
+      "categoryId" : null
+    }, {
+      "name" : "io.javalin",
+      "external" : true,
+      "categoryId" : null
+    }, {
+      "name" : "java.awt",
+      "external" : true,
+      "categoryId" : null
+    }, {
+      "name" : "com.packagraph2.analysis",
+      "external" : false,
+      "categoryId" : null
+    }, {
+      "name" : "com.github.javaparser",
+      "external" : true,
+      "categoryId" : null
+    }, {
+      "name" : "java.io",
+      "external" : true,
+      "categoryId" : null
+    }, {
+      "name" : "com.packagraph2.cli",
+      "external" : false,
+      "categoryId" : null
+    }, {
+      "name" : "com.packagraph2",
+      "external" : false,
+      "categoryId" : null
+    }, {
+      "name" : "java.nio.file.attribute",
+      "external" : true,
+      "categoryId" : null
+    } ],
+    "edges" : [ {
+      "fromPackage" : "com.packagraph2.rules",
+      "toPackage" : "java.util"
+    }, {
+      "fromPackage" : "com.packagraph2.cli",
+      "toPackage" : "picocli"
+    }, {
+      "fromPackage" : "com.packagraph2.analysis",
+      "toPackage" : "java.util"
+    }, {
+      "fromPackage" : "com.packagraph2.analysis",
+      "toPackage" : "com.github.javaparser.ast"
+    }, {
+      "fromPackage" : "com.packagraph2",
+      "toPackage" : "com.packagraph2.cli"
+    }, {
+      "fromPackage" : "com.packagraph2.project",
+      "toPackage" : "com.packagraph2.model"
+    }, {
+      "fromPackage" : "com.packagraph2.cli",
+      "toPackage" : "com.packagraph2.server"
+    }, {
+      "fromPackage" : "com.packagraph2.server",
+      "toPackage" : "io.javalin"
+    }, {
+      "fromPackage" : "com.packagraph2.server",
+      "toPackage" : "org.slf4j"
+    }, {
+      "fromPackage" : "com.packagraph2.project",
+      "toPackage" : "org.slf4j"
+    }, {
+      "fromPackage" : "com.packagraph2.server",
+      "toPackage" : "io.javalin.http"
+    }, {
+      "fromPackage" : "com.packagraph2.server",
+      "toPackage" : "com.packagraph2.model"
+    }, {
+      "fromPackage" : "com.packagraph2.server",
+      "toPackage" : "com.packagraph2.project"
+    }, {
+      "fromPackage" : "com.packagraph2.server",
+      "toPackage" : "java.io"
+    }, {
+      "fromPackage" : "com.packagraph2.server",
+      "toPackage" : "io.javalin.http.staticfiles"
+    }, {
+      "fromPackage" : "com.packagraph2.dot",
+      "toPackage" : "com.packagraph2.rules"
+    }, {
+      "fromPackage" : "com.packagraph2.analysis",
+      "toPackage" : "com.github.javaparser"
+    }, {
+      "fromPackage" : "com.packagraph2.analysis",
+      "toPackage" : "java.util.regex"
+    }, {
+      "fromPackage" : "com.packagraph2.analysis",
+      "toPackage" : "java.nio.file"
+    }, {
+      "fromPackage" : "com.packagraph2.server",
+      "toPackage" : "com.fasterxml.jackson.databind"
+    }, {
+      "fromPackage" : "com.packagraph2.rules",
+      "toPackage" : "java.util.regex"
+    }, {
+      "fromPackage" : "com.packagraph2.server",
+      "toPackage" : "io.javalin.json"
+    }, {
+      "fromPackage" : "com.packagraph2.project",
+      "toPackage" : "java.nio.file"
+    }, {
+      "fromPackage" : "com.packagraph2.dot",
+      "toPackage" : "java.util"
+    }, {
+      "fromPackage" : "com.packagraph2.cli",
+      "toPackage" : "java.net"
+    }, {
+      "fromPackage" : "com.packagraph2.project",
+      "toPackage" : "com.fasterxml.jackson.core.type"
+    }, {
+      "fromPackage" : "com.packagraph2.server",
+      "toPackage" : "com.packagraph2.analysis"
+    }, {
+      "fromPackage" : "com.packagraph2.server",
+      "toPackage" : "com.packagraph2.dot"
+    }, {
+      "fromPackage" : "com.packagraph2.project",
+      "toPackage" : "com.fasterxml.jackson.databind"
+    }, {
+      "fromPackage" : "com.packagraph2.server",
+      "toPackage" : "java.lang.reflect"
+    }, {
+      "fromPackage" : "com.packagraph2.cli",
+      "toPackage" : "org.slf4j"
+    }, {
+      "fromPackage" : "com.packagraph2.project",
+      "toPackage" : "java.util"
+    }, {
+      "fromPackage" : "com.packagraph2.analysis",
+      "toPackage" : "com.github.javaparser.ast.body"
+    }, {
+      "fromPackage" : "com.packagraph2.analysis",
+      "toPackage" : "java.io"
+    }, {
+      "fromPackage" : "com.packagraph2.dot",
+      "toPackage" : "com.packagraph2.model"
+    }, {
+      "fromPackage" : "com.packagraph2.rules",
+      "toPackage" : "com.packagraph2.model"
+    }, {
+      "fromPackage" : "com.packagraph2.analysis",
+      "toPackage" : "org.slf4j"
+    }, {
+      "fromPackage" : "com.packagraph2.analysis",
+      "toPackage" : "com.packagraph2.model"
+    }, {
+      "fromPackage" : "com.packagraph2.rules",
+      "toPackage" : "org.slf4j"
+    }, {
+      "fromPackage" : "com.packagraph2",
+      "toPackage" : "picocli"
+    }, {
+      "fromPackage" : "com.packagraph2.project",
+      "toPackage" : "java.io"
+    }, {
+      "fromPackage" : "com.packagraph2.cli",
+      "toPackage" : "java.awt"
+    }, {
+      "fromPackage" : "com.packagraph2.dot",
+      "toPackage" : "org.slf4j"
+    }, {
+      "fromPackage" : "com.packagraph2.analysis",
+      "toPackage" : "java.nio.file.attribute"
+    }, {
+      "fromPackage" : "com.packagraph2.dot",
+      "toPackage" : "java.util.stream"
+    }, {
+      "fromPackage" : "com.packagraph2.server",
+      "toPackage" : "org.jetbrains.annotations"
+    }, {
+      "fromPackage" : "com.packagraph2.model",
+      "toPackage" : "com.fasterxml.jackson.annotation"
+    }, {
+      "fromPackage" : "com.packagraph2.server",
+      "toPackage" : "java.util"
+    }, {
+      "fromPackage" : "com.packagraph2.model",
+      "toPackage" : "java.util"
+    }, {
+      "fromPackage" : "com.packagraph2.server",
+      "toPackage" : "java.nio.file"
+    } ],
+    "packageClasses" : {
+      "com.packagraph2.analysis" : [ {
+        "name" : "DependencyAnalyzer",
+        "kind" : "class",
+        "scope" : "public"
+      }, {
+        "name" : "SourceScanner",
+        "kind" : "class",
+        "scope" : "public"
+      } ],
+      "com.packagraph2.cli" : [ {
+        "name" : "ServeCommand",
+        "kind" : "class",
+        "scope" : "public"
+      } ],
+      "com.packagraph2.dot" : [ {
+        "name" : "DotGenerator",
+        "kind" : "class",
+        "scope" : "public"
+      } ],
+      "com.packagraph2" : [ {
+        "name" : "Main",
+        "kind" : "class",
+        "scope" : "public"
+      } ],
+      "com.packagraph2.model" : [ {
+        "name" : "Category",
+        "kind" : "class",
+        "scope" : "public"
+      }, {
+        "name" : "ClassInfo",
+        "kind" : "class",
+        "scope" : "public"
+      }, {
+        "name" : "Dependency",
+        "kind" : "class",
+        "scope" : "public"
+      }, {
+        "name" : "DependencyGraph",
+        "kind" : "class",
+        "scope" : "public"
+      }, {
+        "name" : "GraphDirection",
+        "kind" : "enum",
+        "scope" : "public"
+      }, {
+        "name" : "GroupingRule",
+        "kind" : "class",
+        "scope" : "public"
+      }, {
+        "name" : "HideRule",
+        "kind" : "class",
+        "scope" : "public"
+      }, {
+        "name" : "ImportDetail",
+        "kind" : "class",
+        "scope" : "public"
+      }, {
+        "name" : "PackageNode",
+        "kind" : "class",
+        "scope" : "public"
+      }, {
+        "name" : "ProjectConfig",
+        "kind" : "class",
+        "scope" : "public"
+      } ],
+      "com.packagraph2.project" : [ {
+        "name" : "ProjectManager",
+        "kind" : "class",
+        "scope" : "public"
+      }, {
+        "name" : "RecentProjectsManager",
+        "kind" : "class",
+        "scope" : "public"
+      } ],
+      "com.packagraph2.rules" : [ {
+        "name" : "RuleEngine",
+        "kind" : "class",
+        "scope" : "public"
+      } ],
+      "com.packagraph2.server" : [ {
+        "name" : "JacksonMapper",
+        "kind" : "class",
+        "scope" : "public"
+      }, {
+        "name" : "WebServer",
+        "kind" : "class",
+        "scope" : "public"
+      } ]
+    },
+    "edgeDetails" : {
+      "com.packagraph2.analysis" : {
+        "com.github.javaparser" : [ {
+          "sourceClass" : "com.packagraph2.analysis.DependencyAnalyzer",
+          "importedClass" : "com.github.javaparser.JavaParser"
+        }, {
+          "sourceClass" : "com.packagraph2.analysis.DependencyAnalyzer",
+          "importedClass" : "com.github.javaparser.ParserConfiguration"
+        }, {
+          "sourceClass" : "com.packagraph2.analysis.DependencyAnalyzer",
+          "importedClass" : "com.github.javaparser.ParseResult"
+        } ],
+        "com.github.javaparser.ast" : [ {
+          "sourceClass" : "com.packagraph2.analysis.DependencyAnalyzer",
+          "importedClass" : "com.github.javaparser.ast.CompilationUnit"
+        }, {
+          "sourceClass" : "com.packagraph2.analysis.DependencyAnalyzer",
+          "importedClass" : "com.github.javaparser.ast.ImportDeclaration"
+        }, {
+          "sourceClass" : "com.packagraph2.analysis.DependencyAnalyzer",
+          "importedClass" : "com.github.javaparser.ast.Modifier"
+        }, {
+          "sourceClass" : "com.packagraph2.analysis.DependencyAnalyzer",
+          "importedClass" : "com.github.javaparser.ast.PackageDeclaration"
+        } ],
+        "com.github.javaparser.ast.body" : [ {
+          "sourceClass" : "com.packagraph2.analysis.DependencyAnalyzer",
+          "importedClass" : "com.github.javaparser.ast.body.*"
+        } ],
+        "com.packagraph2.model" : [ {
+          "sourceClass" : "com.packagraph2.analysis.DependencyAnalyzer",
+          "importedClass" : "com.packagraph2.model.ClassInfo"
+        }, {
+          "sourceClass" : "com.packagraph2.analysis.DependencyAnalyzer",
+          "importedClass" : "com.packagraph2.model.DependencyGraph"
+        }, {
+          "sourceClass" : "com.packagraph2.analysis.DependencyAnalyzer",
+          "importedClass" : "com.packagraph2.model.ImportDetail"
+        }, {
+          "sourceClass" : "com.packagraph2.analysis.DependencyAnalyzer",
+          "importedClass" : "com.packagraph2.model.PackageNode"
+        } ],
+        "org.slf4j" : [ {
+          "sourceClass" : "com.packagraph2.analysis.DependencyAnalyzer",
+          "importedClass" : "org.slf4j.Logger"
+        }, {
+          "sourceClass" : "com.packagraph2.analysis.DependencyAnalyzer",
+          "importedClass" : "org.slf4j.LoggerFactory"
+        }, {
+          "sourceClass" : "com.packagraph2.analysis.SourceScanner",
+          "importedClass" : "org.slf4j.Logger"
+        }, {
+          "sourceClass" : "com.packagraph2.analysis.SourceScanner",
+          "importedClass" : "org.slf4j.LoggerFactory"
+        } ],
+        "java.io" : [ {
+          "sourceClass" : "com.packagraph2.analysis.DependencyAnalyzer",
+          "importedClass" : "java.io.IOException"
+        }, {
+          "sourceClass" : "com.packagraph2.analysis.SourceScanner",
+          "importedClass" : "java.io.IOException"
+        } ],
+        "java.nio.file" : [ {
+          "sourceClass" : "com.packagraph2.analysis.DependencyAnalyzer",
+          "importedClass" : "java.nio.file.*"
+        }, {
+          "sourceClass" : "com.packagraph2.analysis.SourceScanner",
+          "importedClass" : "java.nio.file.*"
+        } ],
+        "java.nio.file.attribute" : [ {
+          "sourceClass" : "com.packagraph2.analysis.DependencyAnalyzer",
+          "importedClass" : "java.nio.file.attribute.BasicFileAttributes"
+        }, {
+          "sourceClass" : "com.packagraph2.analysis.SourceScanner",
+          "importedClass" : "java.nio.file.attribute.BasicFileAttributes"
+        } ],
+        "java.util" : [ {
+          "sourceClass" : "com.packagraph2.analysis.DependencyAnalyzer",
+          "importedClass" : "java.util.*"
+        }, {
+          "sourceClass" : "com.packagraph2.analysis.SourceScanner",
+          "importedClass" : "java.util.*"
+        } ],
+        "java.util.regex" : [ {
+          "sourceClass" : "com.packagraph2.analysis.DependencyAnalyzer",
+          "importedClass" : "java.util.regex.Matcher"
+        }, {
+          "sourceClass" : "com.packagraph2.analysis.DependencyAnalyzer",
+          "importedClass" : "java.util.regex.Pattern"
+        }, {
+          "sourceClass" : "com.packagraph2.analysis.SourceScanner",
+          "importedClass" : "java.util.regex.Matcher"
+        }, {
+          "sourceClass" : "com.packagraph2.analysis.SourceScanner",
+          "importedClass" : "java.util.regex.Pattern"
+        } ]
+      },
+      "com.packagraph2.cli" : {
+        "com.packagraph2.server" : [ {
+          "sourceClass" : "com.packagraph2.cli.ServeCommand",
+          "importedClass" : "com.packagraph2.server.WebServer"
+        } ],
+        "org.slf4j" : [ {
+          "sourceClass" : "com.packagraph2.cli.ServeCommand",
+          "importedClass" : "org.slf4j.Logger"
+        }, {
+          "sourceClass" : "com.packagraph2.cli.ServeCommand",
+          "importedClass" : "org.slf4j.LoggerFactory"
+        } ],
+        "picocli" : [ {
+          "sourceClass" : "com.packagraph2.cli.ServeCommand",
+          "importedClass" : "picocli.CommandLine.Command"
+        }, {
+          "sourceClass" : "com.packagraph2.cli.ServeCommand",
+          "importedClass" : "picocli.CommandLine.Option"
+        } ],
+        "java.awt" : [ {
+          "sourceClass" : "com.packagraph2.cli.ServeCommand",
+          "importedClass" : "java.awt.Desktop"
+        } ],
+        "java.net" : [ {
+          "sourceClass" : "com.packagraph2.cli.ServeCommand",
+          "importedClass" : "java.net.URI"
+        } ]
+      },
+      "com.packagraph2.dot" : {
+        "com.packagraph2.model" : [ {
+          "sourceClass" : "com.packagraph2.dot.DotGenerator",
+          "importedClass" : "com.packagraph2.model.*"
+        } ],
+        "com.packagraph2.rules" : [ {
+          "sourceClass" : "com.packagraph2.dot.DotGenerator",
+          "importedClass" : "com.packagraph2.rules.RuleEngine"
+        } ],
+        "org.slf4j" : [ {
+          "sourceClass" : "com.packagraph2.dot.DotGenerator",
+          "importedClass" : "org.slf4j.Logger"
+        }, {
+          "sourceClass" : "com.packagraph2.dot.DotGenerator",
+          "importedClass" : "org.slf4j.LoggerFactory"
+        } ],
+        "java.util" : [ {
+          "sourceClass" : "com.packagraph2.dot.DotGenerator",
+          "importedClass" : "java.util.*"
+        } ],
+        "java.util.stream" : [ {
+          "sourceClass" : "com.packagraph2.dot.DotGenerator",
+          "importedClass" : "java.util.stream.Collectors"
+        } ]
+      },
+      "com.packagraph2" : {
+        "com.packagraph2.cli" : [ {
+          "sourceClass" : "com.packagraph2.Main",
+          "importedClass" : "com.packagraph2.cli.ServeCommand"
+        } ],
+        "picocli" : [ {
+          "sourceClass" : "com.packagraph2.Main",
+          "importedClass" : "picocli.CommandLine"
+        }, {
+          "sourceClass" : "com.packagraph2.Main",
+          "importedClass" : "picocli.CommandLine.Command"
+        } ]
+      },
+      "com.packagraph2.model" : {
+        "com.fasterxml.jackson.annotation" : [ {
+          "sourceClass" : "com.packagraph2.model.Category",
+          "importedClass" : "com.fasterxml.jackson.annotation.JsonCreator"
+        }, {
+          "sourceClass" : "com.packagraph2.model.Category",
+          "importedClass" : "com.fasterxml.jackson.annotation.JsonProperty"
+        }, {
+          "sourceClass" : "com.packagraph2.model.Dependency",
+          "importedClass" : "com.fasterxml.jackson.annotation.JsonCreator"
+        }, {
+          "sourceClass" : "com.packagraph2.model.Dependency",
+          "importedClass" : "com.fasterxml.jackson.annotation.JsonProperty"
+        }, {
+          "sourceClass" : "com.packagraph2.model.GroupingRule",
+          "importedClass" : "com.fasterxml.jackson.annotation.JsonCreator"
+        }, {
+          "sourceClass" : "com.packagraph2.model.GroupingRule",
+          "importedClass" : "com.fasterxml.jackson.annotation.JsonProperty"
+        }, {
+          "sourceClass" : "com.packagraph2.model.HideRule",
+          "importedClass" : "com.fasterxml.jackson.annotation.JsonCreator"
+        }, {
+          "sourceClass" : "com.packagraph2.model.HideRule",
+          "importedClass" : "com.fasterxml.jackson.annotation.JsonProperty"
+        }, {
+          "sourceClass" : "com.packagraph2.model.PackageNode",
+          "importedClass" : "com.fasterxml.jackson.annotation.JsonCreator"
+        }, {
+          "sourceClass" : "com.packagraph2.model.PackageNode",
+          "importedClass" : "com.fasterxml.jackson.annotation.JsonProperty"
+        } ],
+        "java.util" : [ {
+          "sourceClass" : "com.packagraph2.model.Category",
+          "importedClass" : "java.util.UUID"
+        }, {
+          "sourceClass" : "com.packagraph2.model.DependencyGraph",
+          "importedClass" : "java.util.*"
+        }, {
+          "sourceClass" : "com.packagraph2.model.GroupingRule",
+          "importedClass" : "java.util.UUID"
+        }, {
+          "sourceClass" : "com.packagraph2.model.HideRule",
+          "importedClass" : "java.util.UUID"
+        }, {
+          "sourceClass" : "com.packagraph2.model.ProjectConfig",
+          "importedClass" : "java.util.ArrayList"
+        }, {
+          "sourceClass" : "com.packagraph2.model.ProjectConfig",
+          "importedClass" : "java.util.HashMap"
+        }, {
+          "sourceClass" : "com.packagraph2.model.ProjectConfig",
+          "importedClass" : "java.util.List"
+        }, {
+          "sourceClass" : "com.packagraph2.model.ProjectConfig",
+          "importedClass" : "java.util.Map"
+        } ]
+      },
+      "com.packagraph2.project" : {
+        "com.fasterxml.jackson.databind" : [ {
+          "sourceClass" : "com.packagraph2.project.ProjectManager",
+          "importedClass" : "com.fasterxml.jackson.databind.ObjectMapper"
+        }, {
+          "sourceClass" : "com.packagraph2.project.ProjectManager",
+          "importedClass" : "com.fasterxml.jackson.databind.SerializationFeature"
+        }, {
+          "sourceClass" : "com.packagraph2.project.RecentProjectsManager",
+          "importedClass" : "com.fasterxml.jackson.databind.ObjectMapper"
+        } ],
+        "com.packagraph2.model" : [ {
+          "sourceClass" : "com.packagraph2.project.ProjectManager",
+          "importedClass" : "com.packagraph2.model.ProjectConfig"
+        } ],
+        "org.slf4j" : [ {
+          "sourceClass" : "com.packagraph2.project.ProjectManager",
+          "importedClass" : "org.slf4j.Logger"
+        }, {
+          "sourceClass" : "com.packagraph2.project.ProjectManager",
+          "importedClass" : "org.slf4j.LoggerFactory"
+        }, {
+          "sourceClass" : "com.packagraph2.project.RecentProjectsManager",
+          "importedClass" : "org.slf4j.Logger"
+        }, {
+          "sourceClass" : "com.packagraph2.project.RecentProjectsManager",
+          "importedClass" : "org.slf4j.LoggerFactory"
+        } ],
+        "java.io" : [ {
+          "sourceClass" : "com.packagraph2.project.ProjectManager",
+          "importedClass" : "java.io.IOException"
+        }, {
+          "sourceClass" : "com.packagraph2.project.RecentProjectsManager",
+          "importedClass" : "java.io.IOException"
+        } ],
+        "java.nio.file" : [ {
+          "sourceClass" : "com.packagraph2.project.ProjectManager",
+          "importedClass" : "java.nio.file.Files"
+        }, {
+          "sourceClass" : "com.packagraph2.project.ProjectManager",
+          "importedClass" : "java.nio.file.Path"
+        }, {
+          "sourceClass" : "com.packagraph2.project.RecentProjectsManager",
+          "importedClass" : "java.nio.file.Files"
+        }, {
+          "sourceClass" : "com.packagraph2.project.RecentProjectsManager",
+          "importedClass" : "java.nio.file.Path"
+        } ],
+        "com.fasterxml.jackson.core.type" : [ {
+          "sourceClass" : "com.packagraph2.project.RecentProjectsManager",
+          "importedClass" : "com.fasterxml.jackson.core.type.TypeReference"
+        } ],
+        "java.util" : [ {
+          "sourceClass" : "com.packagraph2.project.RecentProjectsManager",
+          "importedClass" : "java.util.ArrayList"
+        }, {
+          "sourceClass" : "com.packagraph2.project.RecentProjectsManager",
+          "importedClass" : "java.util.List"
+        } ]
+      },
+      "com.packagraph2.rules" : {
+        "com.packagraph2.model" : [ {
+          "sourceClass" : "com.packagraph2.rules.RuleEngine",
+          "importedClass" : "com.packagraph2.model.*"
+        } ],
+        "org.slf4j" : [ {
+          "sourceClass" : "com.packagraph2.rules.RuleEngine",
+          "importedClass" : "org.slf4j.Logger"
+        }, {
+          "sourceClass" : "com.packagraph2.rules.RuleEngine",
+          "importedClass" : "org.slf4j.LoggerFactory"
+        } ],
+        "java.util" : [ {
+          "sourceClass" : "com.packagraph2.rules.RuleEngine",
+          "importedClass" : "java.util.*"
+        } ],
+        "java.util.regex" : [ {
+          "sourceClass" : "com.packagraph2.rules.RuleEngine",
+          "importedClass" : "java.util.regex.Pattern"
+        } ]
+      },
+      "com.packagraph2.server" : {
+        "com.fasterxml.jackson.databind" : [ {
+          "sourceClass" : "com.packagraph2.server.JacksonMapper",
+          "importedClass" : "com.fasterxml.jackson.databind.ObjectMapper"
+        }, {
+          "sourceClass" : "com.packagraph2.server.WebServer",
+          "importedClass" : "com.fasterxml.jackson.databind.JsonNode"
+        } ],
+        "com.packagraph2.project" : [ {
+          "sourceClass" : "com.packagraph2.server.JacksonMapper",
+          "importedClass" : "com.packagraph2.project.ProjectManager"
+        }, {
+          "sourceClass" : "com.packagraph2.server.WebServer",
+          "importedClass" : "com.packagraph2.project.ProjectManager"
+        }, {
+          "sourceClass" : "com.packagraph2.server.WebServer",
+          "importedClass" : "com.packagraph2.project.RecentProjectsManager"
+        } ],
+        "io.javalin.json" : [ {
+          "sourceClass" : "com.packagraph2.server.JacksonMapper",
+          "importedClass" : "io.javalin.json.JsonMapper"
+        } ],
+        "org.jetbrains.annotations" : [ {
+          "sourceClass" : "com.packagraph2.server.JacksonMapper",
+          "importedClass" : "org.jetbrains.annotations.NotNull"
+        } ],
+        "java.io" : [ {
+          "sourceClass" : "com.packagraph2.server.JacksonMapper",
+          "importedClass" : "java.io.InputStream"
+        }, {
+          "sourceClass" : "com.packagraph2.server.WebServer",
+          "importedClass" : "java.io.IOException"
+        } ],
+        "java.lang.reflect" : [ {
+          "sourceClass" : "com.packagraph2.server.JacksonMapper",
+          "importedClass" : "java.lang.reflect.Type"
+        } ],
+        "com.packagraph2.analysis" : [ {
+          "sourceClass" : "com.packagraph2.server.WebServer",
+          "importedClass" : "com.packagraph2.analysis.DependencyAnalyzer"
+        }, {
+          "sourceClass" : "com.packagraph2.server.WebServer",
+          "importedClass" : "com.packagraph2.analysis.SourceScanner"
+        } ],
+        "com.packagraph2.dot" : [ {
+          "sourceClass" : "com.packagraph2.server.WebServer",
+          "importedClass" : "com.packagraph2.dot.DotGenerator"
+        } ],
+        "com.packagraph2.model" : [ {
+          "sourceClass" : "com.packagraph2.server.WebServer",
+          "importedClass" : "com.packagraph2.model.DependencyGraph"
+        }, {
+          "sourceClass" : "com.packagraph2.server.WebServer",
+          "importedClass" : "com.packagraph2.model.ProjectConfig"
+        } ],
+        "io.javalin" : [ {
+          "sourceClass" : "com.packagraph2.server.WebServer",
+          "importedClass" : "io.javalin.Javalin"
+        } ],
+        "io.javalin.http" : [ {
+          "sourceClass" : "com.packagraph2.server.WebServer",
+          "importedClass" : "io.javalin.http.Context"
+        } ],
+        "io.javalin.http.staticfiles" : [ {
+          "sourceClass" : "com.packagraph2.server.WebServer",
+          "importedClass" : "io.javalin.http.staticfiles.Location"
+        } ],
+        "org.slf4j" : [ {
+          "sourceClass" : "com.packagraph2.server.WebServer",
+          "importedClass" : "org.slf4j.Logger"
+        }, {
+          "sourceClass" : "com.packagraph2.server.WebServer",
+          "importedClass" : "org.slf4j.LoggerFactory"
+        } ],
+        "java.nio.file" : [ {
+          "sourceClass" : "com.packagraph2.server.WebServer",
+          "importedClass" : "java.nio.file.DirectoryStream"
+        }, {
+          "sourceClass" : "com.packagraph2.server.WebServer",
+          "importedClass" : "java.nio.file.Files"
+        }, {
+          "sourceClass" : "com.packagraph2.server.WebServer",
+          "importedClass" : "java.nio.file.Path"
+        } ],
+        "java.util" : [ {
+          "sourceClass" : "com.packagraph2.server.WebServer",
+          "importedClass" : "java.util.*"
+        } ]
+      }
+    },
+    "internalPackageNames" : [ "com.packagraph2.model", "com.packagraph2.rules", "com.packagraph2.dot", "com.packagraph2.server", "com.packagraph2.project", "com.packagraph2.analysis", "com.packagraph2.cli", "com.packagraph2" ]
+  }
+}

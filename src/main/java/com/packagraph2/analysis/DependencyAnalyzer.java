@@ -351,14 +351,6 @@ public class DependencyAnalyzer {
         return str.substring(0, str.lastIndexOf('.'));
     }
 
-    private String extractClassName(String importName) {
-        int lastDot = importName.lastIndexOf('.');
-        if (lastDot >= 0) {
-            return importName.substring(lastDot + 1);
-        }
-        return importName;
-    }
-
     /**
      * Post-processes dependencies: if a dependency target is not recognized as internal
      * but a known internal package is a prefix of it, remap the dependency to that package.

@@ -18,17 +18,17 @@
     "categoryId" : null
   } ],
   "hideRules" : [ {
-    "id" : "b39e97e4-a2e0-468a-b9d1-d3b721d86ad5",
-    "pattern" : "java**",
-    "enabled" : true
-  }, {
     "id" : "23c7ed85-8612-4733-b33f-e246be041cb2",
     "pattern" : "**lombok**",
+    "enabled" : true
+  }, {
+    "id" : "c09f587d-eec8-44a5-bd7b-a98f6a2ffeb6",
+    "pattern" : "java**",
     "enabled" : true
   } ],
   "graphDirection" : "TOP_TO_BOTTOM",
   "highlightCircularDependencies" : true,
-  "trimCommonPrefix" : false,
+  "trimCommonPrefix" : true,
   "transitiveReduction" : false,
   "includeExternalDependencies" : true,
   "comments" : { },

@@ -1249,6 +1249,14 @@ function ctxComment() {
     hideContextMenu();
 }
 
+function ctxCopyPackageName() {
+    if (!contextMenuNode) return;
+    navigator.clipboard.writeText(contextMenuNode).then(() => {
+        toast('Copied: ' + contextMenuNode, 'info');
+    });
+    hideContextMenu();
+}
+
 function saveComment() {
     if (!commentTargetNode) return;
     const text = document.getElementById('comment-text').value.trim();
