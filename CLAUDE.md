@@ -202,7 +202,7 @@ The order of operations when generating a graph:
 
 ## Tech Stack
 
-- **Language**: Java 25
+- **Language**: Java 21
 - **Build tool**: Maven
 - **Source analysis**: JavaParser
 - **Web server (UI mode)**: Javalin

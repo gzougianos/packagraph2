@@ -1,6 +1,13 @@
+<p align="center">
+  <img src="src/main/resources/web/logo.svg" alt="packagraph2 logo" width="120">
+</p>
+
 # packagraph2
 
 An interactive Java package dependency browser and visualizer. Point it at any Java codebase and get a live, explorable graph of how your packages depend on each other — no compilation or build system required.
+
+![packagraph2 example](example.png)
+(Using packagraph2 into packagraph2's source code: *packagraph2.pg2* project)
 
 ## AI Development Disclaimer
 
@@ -8,7 +15,8 @@ This project is a **proof of concept** exploring what AI-assisted development ca
 
 **packagraph2** was built almost entirely with AI (Claude) in roughly **1.5 days** — from zero to a fully functional interactive web UI with features the original never had (live graph editing, undo/redo, categories, comments, export to multiple formats, git clone support, etc.).
 
-The most striking difference is in testing: the original packagraph has automated tests for its core logic because a human developer needs that safety net to refactor and evolve the code with confidence. This version has **no tests** — when the AI writes the code, it can re-read, understand, and regenerate any part of the system on demand. The test suite is, effectively, replaced by the ability to re-prompt. Whether that trade-off holds up long-term is the question this project helps explore.
+The most striking difference is in testing: the original packagraph has automated tests for its core logic because a human developer needs that safety net to refactor and evolve the code with confidence. This version has **no tests** — when the AI writes the code, it can re-read, understand, and regenerate any part of the system on demand. 
+Whether that trade-off holds up long-term is the question this project helps explore.
 
 ## Features
 
