@@ -2,6 +2,8 @@
   <img src="src/main/resources/web/logo.svg" alt="packagraph2 logo" width="120">
 </p>
 
+[![Release](https://github.com/gzougianos/packagraph2/actions/workflows/release.yml/badge.svg)](https://github.com/gzougianos/packagraph2/actions/workflows/release.yml)
+
 # packagraph2
 
 An interactive Java package dependency browser and visualizer. Point it at any Java codebase and get a live, explorable graph of how your packages depend on each other — no compilation or build system required.
